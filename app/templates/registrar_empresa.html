@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Registrar Empresa{% endblock %}
+{% block content %}
+<h2>Registro de Empresa</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>{{ form.nit.label }} {{ form.nit }}</p>
+    <p>{{ form.nombre.label }} {{ form.nombre }}</p>
+    <p>{{ form.correo_electronico.label }} {{ form.correo_electronico }}</p>
+    <p>{{ form.telefono_contacto.label }} {{ form.telefono_contacto }}</p>
+    <p>{{ form.submit }}</p>
+</form>
+{% endblock %}
