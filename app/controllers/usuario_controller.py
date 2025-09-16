@@ -1,5 +1,4 @@
-from app.models import Usuario
-from app.database import db
+from app.models import db, Usuario
 from werkzeug.security import generate_password_hash
 
 def crear_usuario(nom_usuario, contrasena, correo_recuperacion, rol, id_empresa):

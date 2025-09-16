@@ -1,5 +1,6 @@
-from app.models import Empresa
-from app.database import db
+from app.models import db, Empresa
+
+
 
 def crear_empresa(nit, nombre, correo_electronico, telefono_contacto):
     # 1. Validar si ya existe la empresa

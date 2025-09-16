@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Sistema de Inventario{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Sistema de Inventario</h1>
+        <nav>
+            <a href="/">Inicio</a> |
+            <a href="/registrar_empresa">Registrar Empresa</a> |
+            <a href="/registrar_usuario">Registrar Usuario</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 - Sistema de Inventario</p>
+    </footer>
+</body>
+</html>
