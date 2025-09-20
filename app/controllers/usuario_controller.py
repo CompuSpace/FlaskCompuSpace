@@ -19,3 +19,18 @@ def crear_usuario(nom_usuario, contrasena, correo_recuperacion, rol, id_empresa)
     db.session.commit()
 
     return nuevo_usuario, None
+
+    #Login y autenticación
+from werkzeug.security import check_password_hash
+def autenticar_usuario(nom_usuario, contrasena):
+    # 1. Buscar el usuario por nombre
+    usuario = Usuario.query.filter_by(nom_usuario=nom_usuario).first()
+    if not usuario:
+        return None, "Usuario no encontrado"
+
+    # 2. Verificar la contraseña
+    if not check_password_hash(usuario.contrasena, contrasena):
+        return None, "Contraseña incorrecta"
+
+    # 3. Retornar usuario válido
+    return usuario, None
