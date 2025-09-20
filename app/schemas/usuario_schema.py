@@ -1,10 +1,17 @@
+# app/schemas/usuario_schema.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField
-from wtforms.validators import DataRequired, Length, Email
+from wtforms import StringField, PasswordField, SelectField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
 
 class UsuarioForm(FlaskForm):
-    nom_usuario = StringField("Nombre de usuario", validators=[DataRequired(), Length(max=100)])
-    contrasena = PasswordField("Contraseña", validators=[DataRequired()])
-    correo_recuperacion = StringField("Correo recuperación (opcional)", validators=[Email()])
-    rol = SelectField("Rol", choices=[("admin", "Administrador"), ("empleado", "Empleado")], validators=[DataRequired()])
-    submit = SubmitField("Registrar Usuario")
+    nom_usuario = StringField("Nombre de Usuario", validators=[DataRequired()])
+    contrasena = PasswordField("Contraseña", validators=[DataRequired(), Length(min=6)])
+    correo_recuperacion = StringField("Correo de Recuperación", validators=[Email()])
+    rol = SelectField(
+        "Rol",
+        choices=[("1", "Admin"), ("2", "Empleado")],
+        validators=[DataRequired()]
+    )
+    
+    submit = SubmitField("Registrar")
+ 

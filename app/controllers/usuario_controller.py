@@ -12,8 +12,8 @@ def crear_usuario(nom_usuario, contrasena, correo_recuperacion, rol, id_empresa)
         nom_usuario=nom_usuario,
         contrasena=generate_password_hash(contrasena),
         correo_recuperacion=correo_recuperacion,
-        rol=rol,
-        id_empresa=id_empresa
+        rol=int(rol),   # ✅ aquí conviertes el rol recibido en número
+        id_empresa=int(id_empresa)  # por seguridad conviértelo también a int
     )
     db.session.add(nuevo_usuario)
     db.session.commit()

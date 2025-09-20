@@ -1,0 +1,19 @@
+body {
+    background: #f8f9fa; /* gris claro */
+}
+
+.card {
+    border-radius: 1rem;
+    background: white;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+h2 {
+    color: #0d6efd; /* azul Bootstrap */
+    font-weight: bold;
+}
+

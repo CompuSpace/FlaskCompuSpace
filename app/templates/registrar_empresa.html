@@ -1,13 +1,73 @@
 {% extends "base.html" %}
 {% block title %}Registrar Empresa{% endblock %}
 {% block content %}
-<h2>Registro de Empresa</h2>
-<form method="POST">
-    {{ form.hidden_tag() }}
-    <p>{{ form.nit.label }} {{ form.nit }}</p>
-    <p>{{ form.nombre.label }} {{ form.nombre }}</p>
-    <p>{{ form.correo_electronico.label }} {{ form.correo_electronico }}</p>
-    <p>{{ form.telefono_contacto.label }} {{ form.telefono_contacto }}</p>
-    <p>{{ form.submit }}</p>
-</form>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <!-- Mostrar mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4">Registro de Empresa</h2>
+                    
+                    <form method="POST" action="{{ url_for('empresa.registrar_empresa') }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- NIT -->
+                        <div class="mb-3">
+                            {{ form.nit.label(class="form-label") }}
+                            {{ form.nit(class="form-control", placeholder="Ingrese el NIT") }}
+                            {% for error in form.nit.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="mb-3">
+                            {{ form.nombre.label(class="form-label") }}
+                            {{ form.nombre(class="form-control", placeholder="Nombre de la empresa") }}
+                            {% for error in form.nombre.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="mb-3">
+                            {{ form.correo_electronico.label(class="form-label") }}
+                            {{ form.correo_electronico(class="form-control", placeholder="empresa@correo.com") }}
+                            {% for error in form.correo_electronico.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="mb-3">
+                            {{ form.telefono_contacto.label(class="form-label") }}
+                            {{ form.telefono_contacto(class="form-control", placeholder="Número de contacto") }}
+                            {% for error in form.telefono_contacto.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Botón -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

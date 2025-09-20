@@ -3,24 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Sistema de Inventario{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- CSS personalizado -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
-    <header>
-        <h1>Sistema de Inventario</h1>
-        <nav>
-            <a href="/">Inicio</a> |
-            <a href="/registrar_empresa">Registrar Empresa</a> |
-            <a href="/registrar_usuario">Registrar Usuario</a>
-        </nav>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Header -->
+    <header class="bg-primary text-white shadow-sm">
+        <div class="container py-3 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Sistema de Inventario</h1>
+            <nav>
+                <a href="/" class="text-white text-decoration-none me-3">Inicio</a>
+                <a href="/registrar_empresa" class="text-white text-decoration-none me-3">Registrar Empresa</a>
+            </nav>
+        </div>
     </header>
 
-    <main>
-        {% block content %}{% endblock %}
+    <!-- Contenido principal -->
+    <main class="flex-grow-1">
+        <div class="container py-4">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
-    <footer>
-        <p>&copy; 2025 - Sistema de Inventario</p>
+    <!-- Footer -->
+    <footer class="bg-light text-center py-3 mt-auto border-top">
+        <p class="mb-0">&copy; 2025 - Sistema de Inventario</p>
     </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

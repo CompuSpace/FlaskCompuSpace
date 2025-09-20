@@ -6,9 +6,13 @@ usuario_bp = Blueprint("usuario", __name__)
 
 @usuario_bp.route("/registrar_usuario", methods=["GET", "POST"])
 def registrar_usuario():
-    id_empresa = request.args.get("id_empresa")  # llega desde la empresa
+    # Recuperamos el id_empresa desde la URL
+    id_empresa = request.args.get("id_empresa")  
+
     form = UsuarioForm()
+
     if form.validate_on_submit():
+        # Crear usuario en la BD
         usuario, error = crear_usuario(
             nom_usuario=form.nom_usuario.data,
             contrasena=form.contrasena.data,
@@ -16,9 +20,18 @@ def registrar_usuario():
             rol=form.rol.data,
             id_empresa=id_empresa
         )
+
         if error:
             flash(error, "danger")
         else:
-            flash("Usuario registrado con éxito", "success")
-            return redirect(url_for("empresa.registrar_empresa"))  # o al login
+            flash("Usuario registrado con éxito ✅", "success")
+            # Redirige a donde quieras después de registrar (login o dashboard)
+            return redirect(url_for("empresa.registrar_empresa"))  
+
+    else:
+        # Si se envió el formulario pero hubo errores, los mostramos
+        if form.is_submitted():
+            flash("Por favor corrige los errores en el formulario ❌", "danger")
+
+    # Renderizamos la plantilla y enviamos el id_empresa para que siga en la URL
     return render_template("registrar_usuario.html", form=form, id_empresa=id_empresa)

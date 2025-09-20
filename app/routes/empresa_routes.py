@@ -18,6 +18,12 @@ def registrar_empresa():
             flash(error, "danger")
         else:
             flash("Empresa registrada con éxito", "success")
-            # Redirige al registro de usuario pasando el id_empresa
             return redirect(url_for("usuario.registrar_usuario", id_empresa=empresa.id_empresa))
+    else:
+        if form.is_submitted():
+            flash("Formulario enviado pero no pasó validación", "warning")
+            for campo, errores in form.errors.items():
+                for error in errores:
+                    flash(f"Error en {getattr(form, campo).label.text}: {error}", "danger")
+
     return render_template("registrar_empresa.html", form=form)

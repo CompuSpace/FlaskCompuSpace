@@ -1,13 +1,73 @@
 {% extends "base.html" %}
 {% block title %}Registrar Usuario{% endblock %}
 {% block content %}
-<h2>Registro de Usuario</h2>
-<form method="POST">
-    {{ form.hidden_tag() }}
-    <p>{{ form.nom_usuario.label }} {{ form.nom_usuario }}</p>
-    <p>{{ form.contrasena.label }} {{ form.contrasena }}</p>
-    <p>{{ form.correo_recuperacion.label }} {{ form.correo_recuperacion }}</p>
-    <p>{{ form.rol.label }} {{ form.rol }}</p>
-    <p>{{ form.submit }}</p>
-</form>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <!-- Mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4">Registro de Usuario</h2>
+
+                    <form method="POST" action="{{ url_for('usuario.registrar_usuario', id_empresa=id_empresa) }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Nombre de usuario -->
+                        <div class="mb-3">
+                            {{ form.nom_usuario.label(class="form-label") }}
+                            {{ form.nom_usuario(class="form-control", placeholder="Ingrese su nombre de usuario") }}
+                            {% for error in form.nom_usuario.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="mb-3">
+                            {{ form.contrasena.label(class="form-label") }}
+                            {{ form.contrasena(class="form-control", placeholder="Ingrese su contraseña") }}
+                            {% for error in form.contrasena.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Correo de recuperación -->
+                        <div class="mb-3">
+                            {{ form.correo_recuperacion.label(class="form-label") }}
+                            {{ form.correo_recuperacion(class="form-control", placeholder="correo@ejemplo.com") }}
+                            {% for error in form.correo_recuperacion.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Rol -->
+                        <div class="mb-3">
+                            {{ form.rol.label(class="form-label") }}
+                            {{ form.rol(class="form-select") }}
+                            {% for error in form.rol.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Botón -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
