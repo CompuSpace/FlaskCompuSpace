@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Usuarios de la Empresa {{ id_empresa }}</h2>
+    <a href="{{ url_for('usuario.registrar_usuario', id_empresa=id_empresa) }}" class="btn btn-success mb-3">➕ Nuevo Usuario</a>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre de Usuario</th>
+                <th>Correo Recuperación</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for u in usuarios %}
+            <tr>
+                <td>{{ u.id_usuario }}</td>
+                <td>{{ u.nom_usuario }}</td>
+                <td>{{ u.correo_recuperacion }}</td>
+                <td>{{ "Admin" if u.rol == 1 else "Empleado" }}</td>
+                <td>
+                    <a href="{{ url_for('usuario.editar', id_empresa=id_empresa, id_usuario=u.id_usuario) }}" class="btn btn-warning btn-sm">Editar</a>
+                    <form action="{{ url_for('usuario.eliminar', id_empresa=id_empresa, id_usuario=u.id_usuario) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este usuario?')">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

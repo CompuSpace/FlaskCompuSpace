@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <!-- Header del perfil -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">👤 Mi Perfil</h4>
+                <a href="{{ url_for('usuario.editar_perfil') }}" class="btn btn-outline-light btn-sm">
+                    ✏️ Editar Perfil
+                </a>
+            </div>
+            
+            <div class="card-body">
+                <!-- Información del usuario -->
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong>Nombre de Usuario:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="text-muted">{{ usuario.nom_usuario }}</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong>Correo de Recuperación:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="text-muted">{{ usuario.correo_recuperacion or 'No configurado' }}</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong>Rol:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        {% if usuario.rol == 'admin' %}
+                            <span class="badge bg-danger">👑 Administrador</span>
+                        {% elif usuario.rol == 'empleado' %}
+                            <span class="badge bg-primary">👤 Empleado</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ usuario.rol }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong>ID de Usuario:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="text-muted">#{{ usuario.id_usuario }}</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong>Empresa:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="text-muted">ID: {{ usuario.id_empresa }}</span>
+                    </div>
+                </div>
+
+                {% if usuario.fecha_creacion %}
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong>Miembro desde:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="text-muted">{{ usuario.fecha_creacion.strftime('%d/%m/%Y') if usuario.fecha_creacion.strftime else usuario.fecha_creacion }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">⚡ Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('usuario.editar_perfil') }}" class="btn btn-outline-primary w-100">
+                            ✏️ Editar Perfil
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('usuario.listar', id_empresa=usuario.id_empresa) }}" class="btn btn-outline-success w-100">
+                            📋 Ver Usuarios
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón de regreso -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('usuario.listar', id_empresa=usuario.id_empresa) }}" class="btn btn-secondary">
+                ← Volver a Lista de Usuarios
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

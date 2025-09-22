@@ -1,19 +1,24 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from app.schemas.usuario_schema import UsuarioForm
-from app.controllers.usuario_controller import crear_usuario
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from app.controllers.usuario_controller import (
+    crear_usuario,
+    autenticar_usuario,
+    listar_usuarios,
+    obtener_usuario,
+    actualizar_usuario,
+    eliminar_usuario
+)
 
-usuario_bp = Blueprint("usuario", __name__)
+usuario_bp = Blueprint("usuario", __name__, url_prefix="/usuario")
 
-@usuario_bp.route("/registrar_usuario", methods=["GET", "POST"])
-def registrar_usuario():
-    # Recuperamos el id_empresa desde la URL
-    id_empresa = request.args.get("id_empresa")  
-
+# ----------------------------------------------------------------------
+# Registrar usuario
+# ----------------------------------------------------------------------
+@usuario_bp.route("/registrar_usuario/<int:id_empresa>", methods=["GET", "POST"])
+def registrar_usuario(id_empresa):
     form = UsuarioForm()
 
     if form.validate_on_submit():
-        # Crear usuario en la BD
         usuario, error = crear_usuario(
             nom_usuario=form.nom_usuario.data,
             contrasena=form.contrasena.data,
@@ -26,24 +31,18 @@ def registrar_usuario():
             flash(error, "danger")
         else:
             flash("Usuario registrado con éxito ✅", "success")
-            # Redirige a donde quieras después de registrar (login o dashboard)
-            return redirect(url_for("empresa.registrar_empresa"))  
+            return redirect(url_for("usuario.login"))
 
     else:
-        # Si se envió el formulario pero hubo errores, los mostramos
         if form.is_submitted():
             flash("Por favor corrige los errores en el formulario ❌", "danger")
 
-    # Renderizamos la plantilla y enviamos el id_empresa para que siga en la URL
     return render_template("registrar_usuario.html", form=form, id_empresa=id_empresa)
 
 
-      #Login y autenticación
-from app.controllers.usuario_controller import autenticar_usuario
-
-usuario_bp = Blueprint("usuario", __name__)
-
-# Ruta: /login
+# ----------------------------------------------------------------------
+# Login
+# ----------------------------------------------------------------------
 @usuario_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -52,24 +51,112 @@ def login():
 
         usuario, error = autenticar_usuario(nom_usuario, contrasena)
 
-        if error:
-            flash(error, "danger")
+        if error:  
+            flash(error, "danger")  # ← Usa el mensaje que viene de tu controller ("Usuario no encontrado" o "Contraseña incorrecta")
             return render_template("login.html")
 
-        # Guardar sesión
+        # Si todo bien → guardar sesión
         session["usuario_id"] = usuario.id_usuario
-        session["rol"] = usuario.rol
         session["empresa_id"] = usuario.id_empresa
+        session["rol"] = usuario.rol  
+        session["nom_usuario"] = usuario.nom_usuario 
 
-        flash("Inicio de sesión exitoso", "success")
-        return redirect(url_for("dashboard"))  # Ajusta según tu app
+        flash("Inicio de sesión exitoso ✅", "success")
+        return redirect(url_for("usuario.listar", id_empresa=session["empresa_id"]))
 
     return render_template("login.html")
 
 
-# Ruta: /logout
+# ----------------------------------------------------------------------
+# Logout
+# ----------------------------------------------------------------------
 @usuario_bp.route("/logout")
 def logout():
     session.clear()
     flash("Has cerrado sesión", "info")
     return redirect(url_for("usuario.login"))
+
+
+# ----------------------------------------------------------------------
+# CRUD de usuarios (asociados a empresa)
+# ----------------------------------------------------------------------
+@usuario_bp.route("/listar/<int:id_empresa>")
+def listar(id_empresa):
+    usuarios = listar_usuarios(id_empresa)
+    return render_template("usuarios/listar.html", usuarios=usuarios, id_empresa=id_empresa)
+
+
+@usuario_bp.route("/editar/<int:id_empresa>/<int:id_usuario>", methods=["GET", "POST"])
+def editar(id_empresa, id_usuario):
+    usuario = obtener_usuario(id_empresa, id_usuario)
+    if not usuario:
+        flash("Usuario no encontrado", "danger")
+        return redirect(url_for("usuario.listar", id_empresa=id_empresa))
+
+    form = UsuarioForm(obj=usuario)
+
+    if form.validate_on_submit():
+        actualizar_usuario(
+            usuario,
+            nom_usuario=form.nom_usuario.data,
+            contrasena=form.contrasena.data,
+            correo_recuperacion=form.correo_recuperacion.data,
+            rol=form.rol.data
+        )
+        flash("Usuario actualizado con éxito ✅", "success")
+        return redirect(url_for("usuario.listar", id_empresa=id_empresa))
+
+    return render_template("usuarios/editar.html", form=form, usuario=usuario, id_empresa=id_empresa)
+
+
+@usuario_bp.route("/eliminar/<int:id_empresa>/<int:id_usuario>", methods=["POST"])
+def eliminar(id_empresa, id_usuario):
+    usuario = obtener_usuario(id_empresa, id_usuario)
+    if not usuario:
+        flash("Usuario no encontrado", "danger")
+    else:
+        eliminar_usuario(usuario)
+        flash("Usuario eliminado con éxito ✅", "success")
+
+    return redirect(url_for("usuario.listar", id_empresa=id_empresa))
+
+# ----------------------------------------------------------------------
+# Gestión de perfil
+# ----------------------------------------------------------------------
+@usuario_bp.route("/perfil")
+def perfil():
+    if 'usuario_id' not in session:
+        flash("Debes iniciar sesión", "warning")
+        return redirect(url_for('usuario.login'))
+    
+    usuario = obtener_usuario(session['empresa_id'], session['usuario_id'])
+    return render_template("usuarios/perfil.html", usuario=usuario)
+
+@usuario_bp.route("/editar_perfil", methods=["GET", "POST"])
+def editar_perfil():
+    if 'usuario_id' not in session:
+        flash("Debes iniciar sesión", "warning")
+        return redirect(url_for('usuario.login'))
+    
+    usuario = obtener_usuario(session['empresa_id'], session['usuario_id'])
+    if not usuario:
+        flash("Error al cargar el perfil", "danger")
+        return redirect(url_for("usuario.listar", id_empresa=session['empresa_id']))
+
+    form = UsuarioForm(obj=usuario)
+    
+    if form.validate_on_submit():
+        actualizar_usuario(
+            usuario,
+            nom_usuario=form.nom_usuario.data,
+            contrasena=form.contrasena.data if form.contrasena.data else None,
+            correo_recuperacion=form.correo_recuperacion.data,
+            rol=form.rol.data
+        )
+        
+        # Actualizar session si cambió el nombre
+        session['nom_usuario'] = form.nom_usuario.data
+        flash("Perfil actualizado con éxito ✅", "success")
+        return redirect(url_for("usuario.perfil"))
+
+    return render_template("usuarios/editar_perfil.html", form=form, usuario=usuario)

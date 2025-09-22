@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Productos - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📦 Productos</h2>
+    <div>
+        <a href="{{ url_for('producto.stock_bajo', id_empresa=id_empresa) }}" class="btn btn-warning me-2">
+            ⚠️ Stock Bajo
+        </a>
+        <a href="{{ url_for('producto.crear', id_empresa=id_empresa) }}" class="btn btn-success">
+            ➕ Nuevo Producto
+        </a>
+    </div>
+</div>
+
+<!-- Barra de búsqueda -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" 
+                       class="form-control" 
+                       name="busqueda" 
+                       value="{{ busqueda or '' }}" 
+                       placeholder="Buscar por nombre, descripción o ID del producto...">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
+                {% if busqueda %}
+                <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" class="btn btn-secondary">
+                    ❌ Limpiar
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de productos -->
+{% if productos %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            📊 Total: {{ productos|length }} producto{{ 's' if productos|length != 1 else '' }}
+            {% if busqueda %}
+                - Búsqueda: "{{ busqueda }}"
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Producto</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>
+                            <code>{{ producto.id_producto }}</code>
+                        </td>
+                        <td>
+                            <strong>{{ producto.nombre }}</strong>
+                            {% if producto.descripcion %}
+                            <br><small class="text-muted">{{ producto.descripcion[:50] }}{{ '...' if producto.descripcion|length > 50 else '' }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-bold text-success">${{ "{:,}".format(producto.precio) }}</span>
+                        </td>
+                        <td>
+                            {% if producto.stock <= 5 %}
+                                <span class="badge bg-danger">{{ producto.stock }}</span>
+                            {% elif producto.stock <= 10 %}
+                                <span class="badge bg-warning text-dark">{{ producto.stock }}</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ producto.stock }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if producto.stock <= 0 %}
+                                <span class="badge bg-danger">Sin Stock</span>
+                            {% elif producto.stock <= 5 %}
+                                <span class="badge bg-warning text-dark">Stock Bajo</span>
+                            {% else %}
+                                <span class="badge bg-success">Disponible</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('producto.ver', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                                   class="btn btn-outline-info" title="Ver detalles">
+                                    👁️
+                                </a>
+                                <a href="{{ url_for('producto.editar', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    ✏️
+                                </a>
+                                <a href="{{ url_for('producto.ajustar_stock', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                                   class="btn btn-outline-warning" title="Ajustar stock">
+                                    📊
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-outline-danger" 
+                                        title="Eliminar"
+                                        onclick="confirmarEliminacion('{{ producto.id_producto }}', '{{ producto.nombre }}')">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="display-1">📦</i>
+    </div>
+    {% if busqueda %}
+        <h4>No se encontraron productos</h4>
+        <p class="text-muted">No hay productos que coincidan con "{{ busqueda }}"</p>
+        <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" class="btn btn-secondary">
+            Ver todos los productos
+        </a>
+    {% else %}
+        <h4>No tienes productos registrados</h4>
+        <p class="text-muted">Comienza agregando tu primer producto al inventario</p>
+        <a href="{{ url_for('producto.crear', id_empresa=id_empresa) }}" class="btn btn-success">
+            ➕ Crear Primer Producto
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="confirmarEliminarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🗑️ Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar el producto:</p>
+                <p><strong id="productoAEliminar"></strong></p>
+                <p class="text-danger"><small>⚠️ Esta acción no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">🗑️ Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarEliminacion(idProducto, nombreProducto) {
+    document.getElementById('productoAEliminar').textContent = `${nombreProducto} (ID: ${idProducto})`;
+    document.getElementById('formEliminar').action = `{{ url_for('producto.eliminar', id_empresa=id_empresa, id_producto='PLACEHOLDER') }}`.replace('PLACEHOLDER', idProducto);
+    new bootstrap.Modal(document.getElementById('confirmarEliminarModal')).show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <!-- Header -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">✏️ Editar Mi Perfil</h4>
+                <a href="{{ url_for('usuario.perfil') }}" class="btn btn-outline-dark btn-sm">
+                    👤 Ver Perfil
+                </a>
+            </div>
+            
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <!-- Nombre de usuario -->
+                    <div class="mb-3">
+                        {{ form.nom_usuario.label(class="form-label") }}
+                        {{ form.nom_usuario(class="form-control" + (" is-invalid" if form.nom_usuario.errors else "")) }}
+                        {% if form.nom_usuario.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.nom_usuario.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Correo de recuperación -->
+                    <div class="mb-3">
+                        {{ form.correo_recuperacion.label(class="form-label") }}
+                        {{ form.correo_recuperacion(class="form-control" + (" is-invalid" if form.correo_recuperacion.errors else "")) }}
+                        {% if form.correo_recuperacion.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.correo_recuperacion.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Este correo se usará para recuperar tu contraseña si la olvidas.
+                        </div>
+                    </div>
+
+                    <!-- Cambiar contraseña (opcional) -->
+                    <div class="mb-3">
+                        {{ form.contrasena.label(class="form-label") }}
+                        {{ form.contrasena(class="form-control" + (" is-invalid" if form.contrasena.errors else ""), placeholder="Dejar vacío para mantener la actual") }}
+                        {% if form.contrasena.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contrasena.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            ⚠️ Deja este campo vacío si no quieres cambiar tu contraseña actual.
+                        </div>
+                    </div>
+
+                    <!-- Rol (solo lectura para el usuario) -->
+                    <div class="mb-3">
+                        <label class="form-label">Rol Actual</label>
+                        <div class="form-control-plaintext">
+                            {% if usuario.rol == 'admin' %}
+                                <span class="badge bg-danger fs-6">👑 Administrador</span>
+                            {% elif usuario.rol == 'empleado' %}
+                                <span class="badge bg-primary fs-6">👤 Empleado</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">{{ usuario.rol }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="form-text">
+                            Tu rol no puede ser modificado desde aquí. Contacta a un administrador.
+                        </div>
+                    </div>
+
+                    <!-- Información adicional -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">ℹ️ Información:</h6>
+                        <ul class="mb-0">
+                            <li><strong>ID Usuario:</strong> #{{ usuario.id_usuario }}</li>
+                            <li><strong>Empresa:</strong> ID {{ usuario.id_empresa }}</li>
+                            {% if usuario.fecha_creacion %}
+                            <li><strong>Miembro desde:</strong> {{ usuario.fecha_creacion.strftime('%d/%m/%Y') if usuario.fecha_creacion.strftime else usuario.fecha_creacion }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('usuario.perfil') }}" class="btn btn-secondary">
+                            ← Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            💾 Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para confirmar cambios -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const passwordField = document.querySelector('#contrasena');
+    
+    form.addEventListener('submit', function(e) {
+        if (passwordField.value) {
+            if (!confirm('¿Estás seguro de que quieres cambiar tu contraseña?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

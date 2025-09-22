@@ -16,10 +16,21 @@
     <header class="bg-primary text-white shadow-sm">
         <div class="container py-3 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0">Sistema de Inventario</h1>
+            
             <nav>
-                <a href="/" class="text-white text-decoration-none me-3">Inicio</a>
-                <a href="/registrar_empresa" class="text-white text-decoration-none me-3">Registrar Empresa</a>
-                <a href="/login" class="text-white text-decoration-none">Login</a>
+                {% if session.usuario_id %}
+                    <!-- Navegación para usuarios autenticados -->
+                    <span class="text-white me-3">Bienvenido, {{ session.nom_usuario or 'Usuario' }}</span>
+                    <a href="{{ url_for('usuario.listar', id_empresa=session.empresa_id) }}" class="text-white text-decoration-none me-3">📋 Usuarios</a>
+                    <a href="{{ url_for('producto.listar', id_empresa=session.empresa_id) }}">📦 Productos</a>
+                    <a href="{{ url_for('usuario.perfil') }}" class="text-white text-decoration-none me-3">👤 Perfil</a>
+                    <a href="{{ url_for('usuario.logout') }}" class="btn btn-outline-light btn-sm">🚪 Cerrar Sesión</a>
+                {% else %}
+                    <!-- Navegación para usuarios no autenticados -->
+                    <a href="/" class="text-white text-decoration-none me-3">Inicio</a> 
+                    <a href="/registrar_empresa" class="text-white text-decoration-none me-3">Registrar Empresa</a>
+                    <a href="{{ url_for('usuario.login') }}" class="text-white text-decoration-none">Login</a>
+                {% endif %}
             </nav>
         </div>
     </header>
@@ -27,6 +38,18 @@
     <!-- Contenido principal -->
     <main class="flex-grow-1">
         <div class="container py-4">
+            <!-- Mostrar mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             {% block content %}{% endblock %}
         </div>
     </main>

@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Bajo - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>⚠️ Productos con Stock Bajo</h2>
+        <p class="text-muted mb-0">Productos con {{ limite_stock }} o menos unidades en inventario</p>
+    </div>
+    <div>
+        <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" class="btn btn-secondary me-2">
+            📦 Todos los Productos
+        </a>
+        <a href="{{ url_for('producto.crear', id_empresa=id_empresa) }}" class="btn btn-success">
+            ➕ Nuevo Producto
+        </a>
+    </div>
+</div>
+
+<!-- Filtro de límite de stock -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="limite" class="form-label">Mostrar productos con stock menor o igual a:</label>
+                <div class="input-group">
+                    <input type="number" 
+                           class="form-control" 
+                           id="limite" 
+                           name="limite" 
+                           value="{{ limite_stock }}" 
+                           min="0" 
+                           max="100">
+                    <span class="input-group-text">unidades</span>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <button type="submit" class="btn btn-primary me-2">🔄 Actualizar</button>
+                <div class="btn-group" role="group">
+                    <a href="?limite=0" class="btn btn-outline-danger btn-sm">Sin Stock (0)</a>
+                    <a href="?limite=5" class="btn btn-outline-warning btn-sm">Crítico (≤5)</a>
+                    <a href="?limite=10" class="btn btn-outline-info btn-sm">Bajo (≤10)</a>
+                    <a href="?limite=20" class="btn btn-outline-secondary btn-sm">Limitado (≤20)</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de productos -->
+{% if productos %}
+<div class="row">
+    <!-- Resumen de alertas -->
+    <div class="col-12 mb-4">
+        <div class="row">
+            {% set sin_stock = productos | selectattr('stock', 'equalto', 0) | list | length %}
+            {% set critico = productos | selectattr('stock', 'lessthan', 6) | selectattr('stock', 'greaterthan', 0) | list | length %}
+            {% set bajo = productos | selectattr('stock', 'lessthan', 11) | selectattr('stock', 'greaterthan', 5) | list | length %}
+            
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <div class="display-6">{{ sin_stock }}</div>
+                        <div>Sin Stock</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body text-center">
+                        <div class="display-6">{{ critico }}</div>
+                        <div>Stock Crítico</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <div class="display-6">{{ bajo }}</div>
+                        <div>Stock Bajo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body text-center">
+                        <div class="display-6">{{ productos | length }}</div>
+                        <div>Total Productos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    📊 {{ productos|length }} producto{{ 's' if productos|length != 1 else '' }} 
+                    con stock ≤ {{ limite_stock }}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Prioridad</th>
+                                <th>Producto</th>
+                                <th>Stock Actual</th>
+                                <th>Precio</th>
+                                <th>Valor Restante</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in productos | sort(attribute='stock') %}
+                            <tr class="{% if producto.stock == 0 %}table-danger{% elif producto.stock <= 5 %}table-warning{% else %}table-info{% endif %}">
+                                <td>
+                                    {% if producto.stock == 0 %}
+                                        <span class="badge bg-danger">🚨 URGENTE</span>
+                                    {% elif producto.stock <= 2 %}
+                                        <span class="badge bg-warning text-dark">⚠️ ALTO</span>
+                                    {% elif producto.stock <= 5 %}
+                                        <span class="badge bg-info">📊 MEDIO</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">👁️ VIGILAR</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ producto.nombre }}</strong>
+                                        <br><small class="text-muted">ID: {{ producto.id_producto }}</small>
+                                        {% if producto.descripcion %}
+                                        <br><small class="text-muted">{{ producto.descripcion[:40] }}{{ '...' if producto.descripcion|length > 40 else '' }}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if producto.stock == 0 %}
+                                            <span class="badge bg-danger fs-6">0 unidades</span>
+                                        {% elif producto.stock <= 2 %}
+                                            <span class="badge bg-warning text-dark fs-6">{{ producto.stock }} unidades</span>
+                                        {% elif producto.stock <= 5 %}
+                                            <span class="badge bg-info fs-6">{{ producto.stock }} unidades</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary fs-6">{{ producto.stock }} unidades</span>
+                                        {% endif %}
+                                        
+                                        {% if producto.stock == 0 %}
+                                            <span class="ms-2 text-danger">❌</span>
+                                        {% elif producto.stock <= 2 %}
+                                            <span class="ms-2 text-warning">⚠️</span>
+                                        {% else %}
+                                            <span class="ms-2 text-info">📊</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-success fw-bold">${{ "{:,}".format(producto.precio) }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-primary fw-bold">${{ "{:,}".format(producto.precio * producto.stock) }}</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('producto.ajustar_stock', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                                           class="btn btn-warning" title="Ajustar stock">
+                                            📊 Stock
+                                        </a>
+                                        <a href="{{ url_for('producto.ver', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                                           class="btn btn-outline-info" title="Ver detalles">
+                                            👁️
+                                        </a>
+                                        <a href="{{ url_for('producto.editar', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                                           class="btn btn-outline-primary" title="Editar">
+                                            ✏️
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recomendaciones -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">💡 Recomendaciones</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-danger">🚨 Productos sin stock:</h6>
+                        <ul class="small">
+                            <li>Revisar si hay más unidades en almacén</li>
+                            <li>Contactar proveedores para reabastecimiento</li>
+                            <li>Considerar productos sustitutos</li>
+                            <li>Actualizar stock si se encontró inventario</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">⚠️ Stock crítico o bajo:</h6>
+                        <ul class="small">
+                            <li>Planificar próximas compras</li>
+                            <li>Establecer puntos de reorden</li>
+                            <li>Verificar historial de ventas</li>
+                            <li>Considerar aumentar stock mínimo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="display-1">✅</i>
+    </div>
+    <h4 class="text-success">¡Excelente! No hay productos con stock bajo</h4>
+    <p class="text-muted">Todos tus productos tienen más de {{ limite_stock }} unidades en stock</p>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" class="btn btn-primary me-2">
+            📦 Ver Todos los Productos
+        </a>
+        <a href="?limite=20" class="btn btn-outline-secondary">
+            📊 Ver Productos con Stock ≤ 20
+        </a>
+    </div>
+    
+    <!-- Sugerencias cuando no hay stock bajo -->
+    <div class="card mt-4 text-start">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">💡 Mantén el Control</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>✅ Buenas prácticas:</h6>
+                    <ul class="small">
+                        <li>Revisa esta sección regularmente</li>
+                        <li>Establece alertas de stock mínimo</li>
+                        <li>Mantén relaciones con proveedores</li>
+                        <li>Registra todas las entradas y salidas</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>📊 Monitoreo continuo:</h6>
+                    <ul class="small">
+                        <li>Revisa productos con stock ≤ 20</li>
+                        <li>Analiza patrones de venta</li>
+                        <li>Ajusta puntos de reorden</li>
+                        <li>Planifica compras futuras</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Acciones rápidas flotantes -->
+{% if productos %}
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+    <div class="btn-group-vertical" role="group">
+        <button type="button" 
+                class="btn btn-primary btn-sm shadow" 
+                data-bs-toggle="modal" 
+                data-bs-target="#accionesRapidasModal"
+                title="Acciones rápidas">
+            ⚡ Acciones
+        </button>
+    </div>
+</div>
+
+<!-- Modal de acciones rápidas -->
+<div class="modal fade" id="accionesRapidasModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚡ Acciones Rápidas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('producto.crear', id_empresa=id_empresa) }}" 
+                       class="btn btn-success">
+                        ➕ Nuevo Producto
+                    </a>
+                    
+                    <hr>
+                    
+                    <h6>📊 Ajustar stock de productos sin inventario:</h6>
+                    {% for producto in productos %}
+                        {% if producto.stock == 0 %}
+                        <a href="{{ url_for('producto.ajustar_stock', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                           class="btn btn-outline-warning btn-sm">
+                            📦 {{ producto.nombre }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <hr>
+                    
+                    <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" 
+                       class="btn btn-secondary">
+                        📋 Ver Todos los Productos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Animaciones para las filas de la tabla */
+.table-danger {
+    animation: pulseRed 2s infinite;
+}
+
+@keyframes pulseRed {
+    0% { background-color: #f8d7da; }
+    50% { background-color: #f5c2c7; }
+    100% { background-color: #f8d7da; }
+}
+
+/* Efecto hover mejorado */
+.table-hover tbody tr:hover {
+    transform: scale(1.01);
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh cada 5 minutos para mantener datos actualizados
+    setTimeout(function() {
+        if (confirm('¿Quieres actualizar la información de stock bajo?')) {
+            window.location.reload();
+        }
+    }, 300000); // 5 minutos
+    
+    // Resaltar productos sin stock
+    const filasSinStock = document.querySelectorAll('.table-danger');
+    filasSinStock.forEach(function(fila) {
+        fila.style.fontWeight = 'bold';
+    });
+});
+</script>
+{% endblock %}

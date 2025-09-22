@@ -21,50 +21,51 @@
                 <div class="card-body p-4">
                     <h2 class="text-center mb-4">Registro de Usuario</h2>
 
-                    <form method="POST" action="{{ url_for('usuario.registrar_usuario', id_empresa=id_empresa) }}">
-                        {{ form.hidden_tag() }}
+ <form method="POST" action="{{ url_for('usuario.registrar_usuario', id_empresa=id_empresa) }}">
+    {{ form.hidden_tag() }}
+    <input type="hidden" name="id_empresa" value="{{ id_empresa }}">
 
-                        <!-- Nombre de usuario -->
-                        <div class="mb-3">
-                            {{ form.nom_usuario.label(class="form-label") }}
-                            {{ form.nom_usuario(class="form-control", placeholder="Ingrese su nombre de usuario") }}
-                            {% for error in form.nom_usuario.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+    <!-- Nombre de usuario -->
+    <div class="mb-3">
+        {{ form.nom_usuario.label(class="form-label") }}
+        {{ form.nom_usuario(class="form-control", placeholder="Ingrese su nombre de usuario") }}
+        {% for error in form.nom_usuario.errors %}
+            <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+    </div>
 
-                        <!-- Contraseña -->
-                        <div class="mb-3">
-                            {{ form.contrasena.label(class="form-label") }}
-                            {{ form.contrasena(class="form-control", placeholder="Ingrese su contraseña") }}
-                            {% for error in form.contrasena.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+    <!-- Contraseña -->
+    <div class="mb-3">
+        {{ form.contrasena.label(class="form-label") }}
+        {{ form.contrasena(class="form-control", placeholder="Ingrese su contraseña") }}
+        {% for error in form.contrasena.errors %}
+            <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+    </div>
 
-                        <!-- Correo de recuperación -->
-                        <div class="mb-3">
-                            {{ form.correo_recuperacion.label(class="form-label") }}
-                            {{ form.correo_recuperacion(class="form-control", placeholder="correo@ejemplo.com") }}
-                            {% for error in form.correo_recuperacion.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+    <!-- Correo de recuperación -->
+    <div class="mb-3">
+        {{ form.correo_recuperacion.label(class="form-label") }}
+        {{ form.correo_recuperacion(class="form-control", placeholder="correo@ejemplo.com") }}
+        {% for error in form.correo_recuperacion.errors %}
+            <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+    </div>
 
-                        <!-- Rol -->
-                        <div class="mb-3">
-                            {{ form.rol.label(class="form-label") }}
-                            {{ form.rol(class="form-select") }}
-                            {% for error in form.rol.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+    <!-- Rol -->
+    <div class="mb-3">
+        {{ form.rol.label(class="form-label") }}
+        {{ form.rol(class="form-select") }}
+        {% for error in form.rol.errors %}
+            <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+    </div>
 
-                        <!-- Botón -->
-                        <div class="d-grid">
-                            {{ form.submit(class="btn btn-success btn-lg") }}
-                        </div>
-                    </form>
+    <!-- Botón -->
+    <div class="d-grid">
+        {{ form.submit(class="btn btn-success btn-lg") }}
+    </div>
+</form>
                 </div>
             </div>
         </div>
