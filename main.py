@@ -3,6 +3,8 @@ from app import create_app
 from app.routes.empresa_routes import empresa_bp
 from app.routes.usuario_routes import usuario_bp
 from app.routes.producto_routes import producto_bp
+from app.routes.venta_routes import venta_bp
+
 
 
 app = create_app()
@@ -11,6 +13,7 @@ app = create_app()
 app.register_blueprint(empresa_bp)
 app.register_blueprint(usuario_bp, url_prefix="/usuario")
 app.register_blueprint(producto_bp)
+app.register_blueprint(venta_bp)
 
 
 # Ruta principal

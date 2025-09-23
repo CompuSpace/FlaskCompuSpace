@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Método de Pago - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">➕ Nuevo Método de Pago</h4>
+                <a href="{{ url_for('venta.metodos_pago', id_empresa=id_empresa) }}" class="btn btn-outline-light btn-sm">
+                    💳 Ver Métodos
+                </a>
+            </div>
+            
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <!-- Nombre del método -->
+                    <div class="mb-3">
+                        {{ form.nombre.label(class="form-label") }}
+                        {{ form.nombre(class="form-control" + (" is-invalid" if form.nombre.errors else "")) }}
+                        {% if form.nombre.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.nombre.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="text-info">💡 Ej: PayPal, Bitcoin, Cheque, Crédito Empresarial</i>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mb-3">
+                        {{ form.descripcion.label(class="form-label") }}
+                        {{ form.descripcion(class="form-control" + (" is-invalid" if form.descripcion.errors else "")) }}
+                        {% if form.descripcion.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.descripcion.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="text-muted">Opcional - Describe las características o condiciones del método</i>
+                        </div>
+                    </div>
+
+                    <!-- Estado activo -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.activo(class="form-check-input") }}
+                            {{ form.activo.label(class="form-check-label") }}
+                        </div>
+                        <div class="form-text">
+                            <i class="text-info">Solo los métodos activos aparecen en el punto de venta</i>
+                        </div>
+                    </div>
+
+                    <!-- Vista previa -->
+                    <div class="card bg-light mb-3" id="vistaPrevia" style="display: none;">
+                        <div class="card-header">
+                            <h6 class="mb-0">👁️ Vista Previa</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Así se verá en el punto de venta:</strong></p>
+                            <button type="button" class="btn btn-outline-primary" id="botonPreview">
+                                <span id="nombrePreview">Método de Pago</span>
+                            </button>
+                            <div class="mt-2">
+                                <small class="text-muted" id="descripcionPreview"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('venta.metodos_pago', id_empresa=id_empresa) }}" class="btn btn-secondary">
+                            ← Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            💾 Crear Método
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ejemplos y consejos -->
+        <div class="card mt-4 border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">💡 Ejemplos de Métodos Personalizados</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">✅ Buenos ejemplos:</h6>
+                        <ul class="small">
+                            <li><strong>💰 Crédito Empresarial</strong><br>
+                                <em>Para clientes con cuenta corriente</em>
+                            </li>
+                            <li><strong>🏦 Cheque</strong><br>
+                                <em>Pago con cheque bancario</em>
+                            </li>
+                            <li><strong>₿ Criptomonedas</strong><br>
+                                <em>Bitcoin, Ethereum, etc.</em>
+                            </li>
+                            <li><strong>📱 Daviplata</strong><br>
+                                <em>Billetera digital</em>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">⚠️ Consideraciones:</h6>
+                        <ul class="small">
+                            <li>Usa nombres claros y específicos</li>
+                            <li>Agrega emojis para mejor identificación</li>
+                            <li>Incluye condiciones en la descripción</li>
+                            <li>Desactiva métodos temporalmente no disponibles</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métodos existentes -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">📋 Métodos Actuales</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">Métodos de pago ya configurados:</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-success">💵 Efectivo</span>
+                    <span class="badge bg-primary">💳 Tarjeta de Débito</span>
+                    <span class="badge bg-primary">💳 Tarjeta de Crédito</span>
+                    <span class="badge bg-info">📱 Transferencia</span>
+                    <span class="badge bg-info">📱 PSE</span>
+                    <span class="badge bg-secondary">🏦 Consignación</span>
+                </div>
+                <p class="small text-muted mt-2 mb-0">
+                    Los métodos básicos no se pueden eliminar, solo activar/desactivar.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Vista previa en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const nombreInput = document.getElementById('nombre');
+    const descripcionInput = document.getElementById('descripcion');
+    const activoInput = document.getElementById('activo');
+    const vistaPrevia = document.getElementById('vistaPrevia');
+    const nombrePreview = document.getElementById('nombrePreview');
+    const descripcionPreview = document.getElementById('descripcionPreview');
+    const botonPreview = document.getElementById('botonPreview');
+
+    function actualizarVistaPrevia() {
+        const nombre = nombreInput.value.trim();
+        const descripcion = descripcionInput.value.trim();
+        const activo = activoInput.checked;
+
+        if (nombre) {
+            vistaPrevia.style.display = 'block';
+            nombrePreview.textContent = nombre;
+            descripcionPreview.textContent = descripcion || 'Sin descripción';
+            
+            // Cambiar estilo del botón según estado
+            if (activo) {
+                botonPreview.className = 'btn btn-outline-primary';
+                botonPreview.style.opacity = '1';
+            } else {
+                botonPreview.className = 'btn btn-outline-secondary';
+                botonPreview.style.opacity = '0.6';
+            }
+        } else {
+            vistaPrevia.style.display = 'none';
+        }
+    }
+
+    // Escuchar cambios en los inputs
+    nombreInput.addEventListener('input', actualizarVistaPrevia);
+    descripcionInput.addEventListener('input', actualizarVistaPrevia);
+    activoInput.addEventListener('change', actualizarVistaPrevia);
+
+    // Vista previa inicial
+    actualizarVistaPrevia();
+
+    // Sugerencias de nombres con emojis
+    const sugerencias = [
+        '💰 Crédito Empresarial',
+        '🏦 Cheque',
+        '₿ Criptomonedas',
+        '📱 Daviplata',
+        '📱 Nequi',
+        '🎫 Bonos de Regalo',
+        '💳 Tarjeta Regalo',
+        '🤝 Trueque',
+        '📄 Factura a Crédito'
+    ];
+
+    nombreInput.addEventListener('focus', function() {
+        if (!this.value) {
+            const sugerencia = sugerencias[Math.floor(Math.random() * sugerencias.length)];
+            this.placeholder = `Ej: ${sugerencia}`;
+        }
+    });
+
+    // Validación en tiempo real
+    nombreInput.addEventListener('input', function() {
+        const valor = this.value.trim();
+        const feedback = this.nextElementSibling;
+        
+        if (valor.length > 0 && valor.length < 2) {
+            this.classList.add('is-invalid');
+            if (feedback && feedback.classList.contains('invalid-feedback')) {
+                feedback.textContent = 'El nombre debe tener al menos 2 caracteres';
+            }
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

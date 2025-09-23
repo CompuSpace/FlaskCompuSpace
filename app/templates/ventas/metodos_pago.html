@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Métodos de Pago - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>💳 Métodos de Pago</h2>
+        <p class="text-muted mb-0">Configura los métodos de pago disponibles en el punto de venta</p>
+    </div>
+    <div>
+        <a href="{{ url_for('venta.punto_venta', id_empresa=id_empresa) }}" class="btn btn-secondary me-2">
+            🛒 Punto de Venta
+        </a>
+        <a href="{{ url_for('venta.crear_metodo', id_empresa=id_empresa) }}" class="btn btn-success">
+            ➕ Nuevo Método
+        </a>
+    </div>
+</div>
+
+<!-- Lista de Métodos de Pago -->
+{% if metodos %}
+<div class="row">
+    {% for metodo in metodos %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 {{ 'border-success' if metodo.activo else 'border-secondary' }}">
+            <div class="card-header d-flex justify-content-between align-items-center {{ 'bg-success text-white' if metodo.activo else 'bg-secondary text-white' }}">
+                <h6 class="mb-0">{{ metodo.nombre }}</h6>
+                <div>
+                    {% if metodo.activo %}
+                        <span class="badge bg-white text-success">✅ Activo</span>
+                    {% else %}
+                        <span class="badge bg-white text-secondary">❌ Inactivo</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% if metodo.descripcion %}
+                <p class="card-text text-muted">{{ metodo.descripcion }}</p>
+                {% else %}
+                <p class="card-text text-muted fst-italic">Sin descripción</p>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <strong>ID:</strong> {{ metodo.id }}<br>
+                        <strong>Estado:</strong> 
+                        {% if metodo.activo %}
+                            <span class="text-success">Disponible en POS</span>
+                        {% else %}
+                            <span class="text-secondary">No disponible</span>
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100" role="group">
+                    {% if metodo.id <= 6 %}
+                        <!-- Métodos básicos (no editables completamente) -->
+                        <button class="btn btn-outline-primary btn-sm" 
+                                onclick="toggleEstado({{ metodo.id }}, {{ metodo.activo|lower }})">
+                            {% if metodo.activo %}
+                                ❌ Desactivar
+                            {% else %}
+                                ✅ Activar
+                            {% endif %}
+                        </button>
+                    {% else %}
+                        <!-- Métodos personalizados (completamente editables) -->
+                        <a href="{{ url_for('venta.editar_metodo', id_empresa=id_empresa, id_metodo=metodo.id) }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            ✏️ Editar
+                        </a>
+                        <button class="btn btn-outline-danger btn-sm" 
+                                onclick="confirmarEliminacion({{ metodo.id }}, '{{ metodo.nombre }}')">
+                            🗑️ Eliminar
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Información adicional -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">📊 Estadísticas</h6>
+            </div>
+            <div class="card-body">
+                {% set activos = metodos | selectattr('activo') | list | length %}
+                {% set inactivos = metodos | rejectattr('activo') | list | length %}
+                
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="fs-3 text-success">{{ activos }}</div>
+                        <small class="text-muted">Activos</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-3 text-secondary">{{ inactivos }}</div>
+                        <small class="text-muted">Inactivos</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-3 text-primary">{{ metodos | length }}</div>
+                        <small class="text-muted">Total</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">💡 Consejos</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small mb-0">
+                    <li>Solo los métodos <strong>activos</strong> aparecen en el punto de venta</li>
+                    <li>Los métodos básicos (Efectivo, Tarjetas, etc.) no se pueden eliminar</li>
+                    <li>Puedes crear métodos personalizados para tu negocio</li>
+                    <li>Desactiva temporalmente métodos que no uses</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="display-1">💳</i>
+    </div>
+    <h4>No hay métodos de pago configurados</h4>
+    <p class="text-muted">Los métodos básicos deberían estar disponibles por defecto</p>
+    <a href="{{ url_for('venta.crear_metodo', id_empresa=id_empresa) }}" class="btn btn-success">
+        ➕ Crear Primer Método
+    </a>
+</div>
+{% endif %}
+
+<!-- Modal de Confirmación para Eliminar -->
+<div class="modal fade" id="confirmarEliminarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🗑️ Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar el método de pago:</p>
+                <p><strong id="metodoAEliminar"></strong></p>
+                <div class="alert alert-warning">
+                    <strong>⚠️ Advertencia:</strong> Esta acción no se puede deshacer y el método no estará disponible en futuras ventas.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">🗑️ Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarEliminacion(idMetodo, nombreMetodo) {
+    document.getElementById('metodoAEliminar').textContent = nombreMetodo;
+    // Construir la URL dinámicamente sin usar url_for en JavaScript
+    const baseUrl = "{{ url_for('venta.eliminar_metodo', id_empresa=id_empresa, id_metodo=1) }}".replace('/1', '');
+    document.getElementById('formEliminar').action = baseUrl + '/' + idMetodo;
+    new bootstrap.Modal(document.getElementById('confirmarEliminarModal')).show();
+}
+
+function toggleEstado(idMetodo, estadoActual) {
+    const accion = estadoActual ? 'desactivar' : 'activar';
+    const mensaje = `¿Estás seguro de que quieres ${accion} este método de pago?`;
+    
+    if (confirm(mensaje)) {
+        // Construir URL dinámicamente
+        const baseUrl = "{{ url_for('venta.metodos_pago', id_empresa=id_empresa) }}";
+        window.location.href = baseUrl + '?toggle=' + idMetodo;
+    }
+}
+
+// Mostrar alertas automáticas si hay pocos métodos activos
+document.addEventListener('DOMContentLoaded', function() {
+    const metodosActivos = {{ (metodos | selectattr('activo') | list | length) if metodos else 0 }};
+    
+    if (metodosActivos < 2) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-warning alert-dismissible fade show';
+        alert.innerHTML = `
+            <strong>⚠️ Atención:</strong> Solo tienes ${metodosActivos} método${metodosActivos === 1 ? '' : 's'} de pago activo${metodosActivos === 1 ? '' : 's'}. 
+            Considera activar más métodos para ofrecer más opciones a tus clientes.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.querySelector('.container').insertBefore(alert, document.querySelector('.container').firstChild);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block title %}Venta #{{ venta.id_venta }} - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>🧾 Detalle de Venta #{{ venta.id_venta }}</h2>
+        <p class="text-muted mb-0">{{ venta.fecha_hora if venta.fecha_hora is string else venta.fecha_hora.strftime('%d/%m/%Y %H:%M:%S') }}</p>
+    </div>
+    <div>
+        <button class="btn btn-outline-primary me-2" onclick="imprimirTicket()">
+            🖨️ Imprimir Ticket
+        </button>
+        <a href="{{ url_for('venta.historial', id_empresa=id_empresa) }}" class="btn btn-secondary">
+            📋 Volver al Historial
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Información Principal -->
+    <div class="col-md-8">
+        <!-- Header de la Venta -->
+        <div class="card mb-4">
+            <div class="card-header bg-{{ 'danger' if 'ANULADA' in venta.metodo_pago else 'success' }} text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        {% if 'ANULADA' in venta.metodo_pago %}
+                            ❌ Venta Anulada
+                        {% else %}
+                            ✅ Venta Completada
+                        {% endif %}
+                    </h5>
+                    <span class="badge bg-light text-dark">#{{ venta.id_venta }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">INFORMACIÓN DE LA VENTA</h6>
+                        <div class="mb-2">
+                            <strong>Fecha y Hora:</strong><br>
+                            <span class="fs-6">{{ venta.fecha_hora if venta.fecha_hora is string else venta.fecha_hora.strftime('%d de %B de %Y a las %H:%M:%S') }}</span>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Método de Pago:</strong><br>
+                            {% if 'ANULADA' in venta.metodo_pago %}
+                                <span class="badge bg-danger fs-6">{{ venta.metodo_pago }}</span>
+                            {% else %}
+                                <span class="badge bg-primary fs-6">{{ venta.metodo_pago }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-2">
+                            <strong>Vendedor:</strong><br>
+                            {% if venta.usuario %}
+                                <span class="fs-6">{{ venta.usuario.nom_usuario }}</span>
+                            {% else %}
+                                <span class="text-muted">Sistema</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 text-end">
+                        <h6 class="text-muted">TOTALES</h6>
+                        <div class="mb-2">
+                            <small class="text-muted">Cantidad de Items:</small><br>
+                            <span class="fs-4 text-info">{{ venta.cantidad }}</span>
+                        </div>
+                        
+                        {% if venta.subtotal != venta.total %}
+                        <div class="mb-2">
+                            <small class="text-muted">Subtotal:</small><br>
+                            <span class="fs-5">${{ "{:,}".format(venta.subtotal) }}</span>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">Descuento:</small><br>
+                            <span class="fs-5 text-danger">-${{ "{:,}".format(venta.subtotal - venta.total) }}</span>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-2">
+                            <strong class="text-muted">TOTAL:</strong><br>
+                            {% if 'ANULADA' in venta.metodo_pago %}
+                                <span class="fs-2 text-muted text-decoration-line-through">${{ "{:,}".format(venta.total) }}</span>
+                            {% else %}
+                                <span class="fs-2 text-success fw-bold">${{ "{:,}".format(venta.total) }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalles de Productos -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📦 Productos Vendidos</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if venta.detalles %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th width="80">Cantidad</th>
+                                <th width="120">Precio Unit.</th>
+                                <th width="120">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in venta.detalles %}
+                            <tr>
+                                <td>
+                                    <strong>{{ detalle.producto.nombre }}</strong>
+                                    <br><small class="text-muted">ID: {{ detalle.producto.id_producto }}</small>
+                                    {% if detalle.producto.descripcion %}
+                                    <br><small class="text-muted">{{ detalle.producto.descripcion[:50] }}{{ '...' if detalle.producto.descripcion|length > 50 else '' }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info fs-6">{{ detalle.cantidad }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold">${{ "{:,}".format(detalle.precio_unitario) }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-success">${{ "{:,}".format(detalle.subtotal) }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="3" class="text-end">TOTAL:</th>
+                                <th class="text-end">
+                                    {% if 'ANULADA' in venta.metodo_pago %}
+                                        <span class="text-muted text-decoration-line-through">${{ "{:,}".format(venta.total) }}</span>
+                                    {% else %}
+                                        <span class="text-success">${{ "{:,}".format(venta.total) }}</span>
+                                    {% endif %}
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No se encontraron detalles de productos para esta venta</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Lateral -->
+    <div class="col-md-4">
+        <!-- Acciones -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">⚡ Acciones</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="imprimirTicket()">
+                        🖨️ Imprimir Ticket
+                    </button>
+                    
+                    {% if 'ANULADA' not in venta.metodo_pago %}
+                    <button class="btn btn-outline-warning" onclick="mostrarModalAnular()">
+                        ❌ Anular Venta
+                    </button>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline-info" onclick="enviarPorEmail()">
+                        📧 Enviar por Email
+                    </button>
+                    
+                    <hr>
+                    
+                    <a href="{{ url_for('venta.historial', id_empresa=id_empresa) }}" class="btn btn-secondary">
+                        📋 Volver al Historial
+                    </a>
+                    
+                    <a href="{{ url_for('venta.punto_venta', id_empresa=id_empresa) }}" class="btn btn-success">
+                        🛒 Nuevo Punto de Venta
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de la Empresa -->
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">🏢 Información</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Empresa ID:</strong><br>
+                    <span class="text-muted">{{ id_empresa }}</span>
+                </div>
+                
+                {% if venta.usuario %}
+                <div class="mb-2">
+                    <strong>Vendedor:</strong><br>
+                    <span class="text-muted">{{ venta.usuario.nom_usuario }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="mb-2">
+                    <strong>Fecha de Venta:</strong><br>
+                    <span class="text-muted">{{ venta.fecha_hora.strftime('%d/%m/%Y') if not venta.fecha_hora is string else venta.fecha_hora.split(' ')[0] }}</span>
+                </div>
+                
+                <div class="mb-2">
+                    <strong>Hora:</strong><br>
+                    <span class="text-muted">{{ venta.fecha_hora.strftime('%H:%M:%S') if not venta.fecha_hora is string else venta.fecha_hora.split(' ')[1] }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">📊 Estadísticas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="display-6 text-info">{{ venta.cantidad }}</div>
+                        <small class="text-muted">Items</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="display-6 text-success">${{ "{:,}".format(venta.total) }}</div>
+                        <small class="text-muted">Total</small>
+                    </div>
+                </div>
+                
+                {% if venta.detalles %}
+                <div class="mb-2">
+                    <strong>Precio Promedio por Item:</strong><br>
+                    <span class="text-primary">${{ "{:,}".format((venta.total / venta.cantidad) | round | int) }}</span>
+                </div>
+                
+                <div class="mb-2">
+                    <strong>Tipos de Productos:</strong><br>
+                    <span class="text-info">{{ venta.detalles|length }} diferentes</span>
+                </div>
+                {% endif %}
+                
+                {% if venta.subtotal != venta.total %}
+                <div class="mb-2">
+                    <strong>Descuento Aplicado:</strong><br>
+                    <span class="text-danger">${{ "{:,}".format(venta.subtotal - venta.total) }}</span>
+                    <small class="text-muted">({{ "%.1f"|format(((venta.subtotal - venta.total) / venta.subtotal * 100)) }}%)</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Anular Venta -->
+<div class="modal fade" id="modalAnularVenta" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">❌ Anular Venta #{{ venta.id_venta }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('venta.anular', id_empresa=id_empresa, id_venta=venta.id_venta) }}">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Atención:</strong> Esta acción anulará la venta y restaurará el stock de los productos vendidos.
+                    </div>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6>Resumen de la venta a anular:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Total:</strong> ${{ "{:,}".format(venta.total) }}</li>
+                                <li><strong>Productos:</strong> {{ venta.cantidad }} items</li>
+                                <li><strong>Método de Pago:</strong> {{ venta.metodo_pago }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="motivoAnulacion" class="form-label">Motivo de la anulación <span class="text-danger">*</span></label>
+                        <textarea class="form-control" 
+                                  id="motivoAnulacion" 
+                                  name="motivo" 
+                                  required 
+                                  rows="4" 
+                                  placeholder="Explica detalladamente el motivo por el cual se anula esta venta..."></textarea>
+                        <div class="form-text">Mínimo 10 caracteres. Este motivo quedará registrado permanentemente.</div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmarAnulacion" required>
+                        <label class="form-check-label" for="confirmarAnulacion">
+                            Confirmo que deseo anular esta venta y entiendo que esta acción no se puede deshacer
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">❌ Anular Venta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Versión para Imprimir (Ticket) -->
+<div id="ticketImpresion" style="display: none;">
+    <div style="width: 300px; font-family: monospace; font-size: 12px; line-height: 1.2;">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <strong>TICKET DE VENTA</strong><br>
+            <strong>Venta #{{ venta.id_venta }}</strong>
+        </div>
+        
+        <div style="border-top: 1px dashed #000; padding-top: 5px; margin-bottom: 10px;">
+            <div>Fecha: {{ venta.fecha_hora.strftime('%d/%m/%Y %H:%M') if not venta.fecha_hora is string else venta.fecha_hora }}</div>
+            {% if venta.usuario %}<div>Vendedor: {{ venta.usuario.nom_usuario }}</div>{% endif %}
+            <div>Método: {{ venta.metodo_pago }}</div>
+        </div>
+        
+        <div style="border-top: 1px dashed #000; padding-top: 5px; margin-bottom: 10px;">
+            {% for detalle in venta.detalles %}
+            <div style="margin-bottom: 5px;">
+                <div><strong>{{ detalle.producto.nombre }}</strong></div>
+                <div>{{ detalle.cantidad }} x ${{ "{:,}".format(detalle.precio_unitario) }} = ${{ "{:,}".format(detalle.subtotal) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div style="border-top: 1px dashed #000; padding-top: 5px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>Total Items:</span>
+                <span>{{ venta.cantidad }}</span>
+            </div>
+            
+            {% if venta.subtotal != venta.total %}
+            <div style="display: flex; justify-content: space-between;">
+                <span>Subtotal:</span>
+                <span>${{ "{:,}".format(venta.subtotal) }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Descuento:</span>
+                <span>-${{ "{:,}".format(venta.subtotal - venta.total) }}</span>
+            </div>
+            {% endif %}
+            
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 5px; margin-top: 5px;">
+                <span>TOTAL:</span>
+                <span>${{ "{:,}".format(venta.total) }}</span>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px; font-size: 10px;">
+            <div>¡Gracias por su compra!</div>
+            <div>Sistema de Inventario - {{ venta.fecha_hora.strftime('%d/%m/%Y') if not venta.fecha_hora is string else venta.fecha_hora.split(' ')[0] }}</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function imprimirTicket() {
+    const contenido = document.getElementById('ticketImpresion').innerHTML;
+    const ventana = window.open('', '_blank', 'width=400,height=600');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Ticket - Venta #{{ venta.id_venta }}</title>
+                <style>
+                    body { margin: 0; padding: 20px; }
+                    @media print {
+                        body { margin: 0; padding: 10px; }
+                    }
+                </style>
+            </head>
+            <body>
+                ${contenido}
+            </body>
+        </html>
+    `);
+    ventana.document.close();
+    ventana.print();
+}
+
+function mostrarModalAnular() {
+    new bootstrap.Modal(document.getElementById('modalAnularVenta')).show();
+}
+
+function enviarPorEmail() {
+    const asunto = 'Detalle de Venta #{{ venta.id_venta }}';
+    const cuerpo = `Detalle de venta del ${venta.fecha_hora}%0D%0A%0D%0ATotal: ${{ "{:,}".format(venta.total) }}%0D%0AProductos: {{ venta.cantidad }} items%0D%0AMétodo de pago: {{ venta.metodo_pago }}`;
+    
+    window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
+}
+
+// Manejar impresión si viene con parámetro print
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('print') === '1') {
+        setTimeout(imprimirTicket, 500);
+    }
+});
+
+// Validación del formulario de anulación
+document.querySelector('#modalAnularVenta form').addEventListener('submit', function(e) {
+    const motivo = document.getElementById('motivoAnulacion').value.trim();
+    const confirmacion = document.getElementById('confirmarAnulacion').checked;
+    
+    if (motivo.length < 10) {
+        e.preventDefault();
+        alert('El motivo debe tener al menos 10 caracteres');
+        document.getElementById('motivoAnulacion').focus();
+        return false;
+    }
+    
+    if (!confirmacion) {
+        e.preventDefault();
+        alert('Debes confirmar que deseas anular la venta');
+        document.getElementById('confirmarAnulacion').focus();
+        return false;
+    }
+    
+    const confirmFinal = confirm('¿Estás COMPLETAMENTE SEGURO de anular esta venta? Esta acción NO se puede deshacer.');
+    
+    if (confirmFinal) {
+        // Deshabilitar botón para evitar doble envío
+        const btnSubmit = this.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '⏳ Anulando...';
+    }
+    
+    return confirmFinal;
+});
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        imprimirTicket();
+    }
+});
+</script>
+
+<style>
+@media print {
+    .btn, .card-header, .modal, nav, footer {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 0.9rem;
+    }
+}
+
+.badge {
+    font-size: 0.85em;
+}
+</style>
+{% endblock %}

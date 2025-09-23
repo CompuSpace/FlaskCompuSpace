@@ -22,7 +22,8 @@
                     <!-- Navegación para usuarios autenticados -->
                     <span class="text-white me-3">Bienvenido, {{ session.nom_usuario or 'Usuario' }}</span>
                     <a href="{{ url_for('usuario.listar', id_empresa=session.empresa_id) }}" class="text-white text-decoration-none me-3">📋 Usuarios</a>
-                    <a href="{{ url_for('producto.listar', id_empresa=session.empresa_id) }}">📦 Productos</a>
+                    <a href="{{ url_for('producto.listar', id_empresa=session.empresa_id) }}" class="text-white text-decoration-none me-3">📦 Productos</a>
+                    <a href="{{ url_for('venta.punto_venta', id_empresa=session.empresa_id) }}" class="text-white text-decoration-none me-3">🛒 Ventas</a>
                     <a href="{{ url_for('usuario.perfil') }}" class="text-white text-decoration-none me-3">👤 Perfil</a>
                     <a href="{{ url_for('usuario.logout') }}" class="btn btn-outline-light btn-sm">🚪 Cerrar Sesión</a>
                 {% else %}
@@ -53,6 +54,8 @@
             {% block content %}{% endblock %}
         </div>
     </main>
+
+  
 
     <!-- Footer -->
     <footer class="bg-light text-center py-3 mt-auto border-top">

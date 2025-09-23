@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Ventas - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>📋 Historial de Ventas</h2>
+        <p class="text-muted mb-0">Registro de todas las transacciones realizadas</p>
+    </div>
+    <div>
+        <a href="{{ url_for('venta.punto_venta', id_empresa=id_empresa) }}" class="btn btn-success">
+            🛒 Punto de Venta
+        </a>
+    </div>
+</div>
+
+<!-- Filtros de búsqueda -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">🔍 Filtros de Búsqueda</h6>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="desde" class="form-label">Fecha Desde</label>
+                <input type="date" class="form-control" id="desde" name="desde" value="{{ fecha_desde or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="hasta" class="form-label">Fecha Hasta</label>
+                <input type="date" class="form-control" id="hasta" name="hasta" value="{{ fecha_hasta or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="filtrar" class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+                </div>
+            </div>
+        </form>
+        
+        {% if fecha_desde or fecha_hasta %}
+        <div class="mt-3">
+            <span class="badge bg-info me-2">
+                📅 Filtrado: 
+                {% if fecha_desde %}desde {{ fecha_desde }}{% endif %}
+                {% if fecha_hasta %}hasta {{ fecha_hasta }}{% endif %}
+            </span>
+            <a href="{{ url_for('venta.historial', id_empresa=id_empresa) }}" class="btn btn-outline-secondary btn-sm">
+                ❌ Limpiar Filtros
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Resumen de ventas -->
+{% if ventas %}
+{% set total_ventas = ventas | length %}
+{% set total_ingresos = ventas | sum(attribute='total') %}
+{% set total_productos = ventas | sum(attribute='cantidad') %}
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="display-6">{{ total_ventas }}</div>
+                <div>Total Ventas</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <div class="display-6">${{ "{:,}".format(total_ingresos) }}</div>
+                <div>Ingresos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <div class="display-6">{{ total_productos }}</div>
+                <div>Productos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <div class="display-6">${{ "{:,}".format((total_ingresos / total_ventas) | round | int) }}</div>
+                <div>Promedio</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Lista de ventas -->
+{% if ventas %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">📊 {{ ventas|length }} venta{{ 's' if ventas|length != 1 else '' }}</h5>
+        <button class="btn btn-outline-primary btn-sm" onclick="exportarVentas()">
+            📤 Exportar
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Venta</th>
+                        <th>Fecha y Hora</th>
+                        <th>Productos</th>
+                        <th>Método de Pago</th>
+                        <th>Total</th>
+                        <th>Usuario</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas %}
+                    <tr class="{{ 'table-danger' if 'ANULADA' in venta.metodo_pago else '' }}">
+                        <td>
+                            <strong>#{{ venta.id_venta }}</strong>
+                        </td>
+                        <td>
+                            {{ venta.fecha_hora if venta.fecha_hora is string else venta.fecha_hora.strftime('%d/%m/%Y %H:%M') }}
+                            <br><small class="text-muted">Hace poco</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ venta.cantidad }} items</span>
+                            {% if venta.detalles %}
+                            <br><small class="text-muted">
+                                {% for detalle in venta.detalles[:2] %}
+                                    {{ detalle.producto.nombre }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                                {% if venta.detalles|length > 2 %}
+                                    y {{ venta.detalles|length - 2 }} más...
+                                {% endif %}
+                            </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if 'ANULADA' in venta.metodo_pago %}
+                                <span class="badge bg-danger">❌ {{ venta.metodo_pago }}</span>
+                            {% else %}
+                                <span class="badge bg-primary">{{ venta.metodo_pago }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if 'ANULADA' in venta.metodo_pago %}
+                                <span class="text-muted text-decoration-line-through">${{ "{:,}".format(venta.total) }}</span>
+                                <br><small class="text-danger">Anulada</small>
+                            {% else %}
+                                <span class="fw-bold text-success">${{ "{:,}".format(venta.total) }}</span>
+                                {% if venta.subtotal != venta.total %}
+                                <br><small class="text-muted">Subtotal: ${{ "{:,}".format(venta.subtotal) }}</small>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if venta.usuario %}
+                                {{ venta.usuario.nom_usuario }}
+                            {% else %}
+                                <span class="text-muted">Sistema</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if 'ANULADA' in venta.metodo_pago %}
+                                <span class="badge bg-danger">❌ Anulada</span>
+                            {% else %}
+                                <span class="badge bg-success">✅ Completada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('venta.detalle', id_empresa=id_empresa, id_venta=venta.id_venta) }}" 
+                                   class="btn btn-outline-info" title="Ver detalles">
+                                    👁️
+                                </a>
+                                {% if 'ANULADA' not in venta.metodo_pago %}
+                                <button class="btn btn-outline-warning" 
+                                        title="Anular venta"
+                                        onclick="mostrarModalAnular({{ venta.id_venta }}, '{{ venta.total }}')">
+                                    ❌
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-outline-secondary" 
+                                        title="Imprimir ticket"
+                                        onclick="imprimirTicket({{ venta.id_venta }})">
+                                    🖨️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Paginación (si hay muchas ventas) -->
+{% if ventas|length >= 50 %}
+<div class="text-center mt-4">
+    <p class="text-muted">Mostrando las últimas 50 ventas</p>
+    <button class="btn btn-outline-primary" onclick="cargarMasVentas()">
+        📄 Cargar Más Ventas
+    </button>
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="display-1">📋</i>
+    </div>
+    {% if fecha_desde or fecha_hasta %}
+        <h4>No se encontraron ventas en el período seleccionado</h4>
+        <p class="text-muted">Intenta ajustar las fechas del filtro</p>
+        <a href="{{ url_for('venta.historial', id_empresa=id_empresa) }}" class="btn btn-secondary">
+            Ver Todas las Ventas
+        </a>
+    {% else %}
+        <h4>No hay ventas registradas</h4>
+        <p class="text-muted">Las ventas aparecerán aquí una vez que comiences a usar el punto de venta</p>
+        <a href="{{ url_for('venta.punto_venta', id_empresa=id_empresa) }}" class="btn btn-success">
+            🛒 Ir al Punto de Venta
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Modal para Anular Venta -->
+<div class="modal fade" id="modalAnularVenta" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">❌ Anular Venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="formAnular">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Atención:</strong> Esta acción anulará la venta y restaurará el stock de los productos vendidos.
+                    </div>
+                    
+                    <p>¿Estás seguro de que quieres anular la venta <strong id="ventaIdAnular"></strong> por valor de <strong id="ventaTotalAnular"></strong>?</p>
+                    
+                    <div class="mb-3">
+                        <label for="motivoAnulacion" class="form-label">Motivo de la anulación <span class="text-danger">*</span></label>
+                        <textarea class="form-control" 
+                                  id="motivoAnulacion" 
+                                  name="motivo" 
+                                  required 
+                                  rows="4" 
+                                  placeholder="Explica el motivo por el cual se anula esta venta..."></textarea>
+                        <div class="form-text">Mínimo 10 caracteres</div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmarAnulacion" required>
+                        <label class="form-check-label" for="confirmarAnulacion">
+                            Confirmo que deseo anular esta venta y entiendo que esta acción no se puede deshacer
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">❌ Anular Venta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalles Rápidos -->
+<div class="modal fade" id="modalDetallesRapidos" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📋 Detalles de Venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contenidoDetalles">
+                <!-- Se carga dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function mostrarModalAnular(idVenta, total) {
+    document.getElementById('ventaIdAnular').textContent = `#${idVenta}`;
+    document.getElementById('ventaTotalAnular').textContent = `${parseInt(total).toLocaleString()}`;
+    
+    // Construir URL dinámicamente
+    const baseUrl = "{{ url_for('venta.anular', id_empresa=id_empresa, id_venta=1) }}".replace('/1', '');
+    document.getElementById('formAnular').action = baseUrl + '/' + idVenta;
+    
+    // Limpiar formulario
+    document.getElementById('motivoAnulacion').value = '';
+    document.getElementById('confirmarAnulacion').checked = false;
+    
+    new bootstrap.Modal(document.getElementById('modalAnularVenta')).show();
+}
+
+function imprimirTicket(idVenta) {
+    // Construir URL dinámicamente
+    const baseUrl = "{{ url_for('venta.detalle', id_empresa=id_empresa, id_venta=1) }}".replace('/1', '');
+    const url = baseUrl + '/' + idVenta + '?print=1';
+    window.open(url, '_blank', 'width=400,height=600,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes');
+}
+
+function exportarVentas() {
+    const fechaDesde = '{{ fecha_desde or "" }}';
+    const fechaHasta = '{{ fecha_hasta or "" }}';
+    
+    // Crear CSV con las ventas actuales
+    const ventas = document.querySelectorAll('tbody tr');
+    let csvContent = 'ID Venta,Fecha,Productos,Método Pago,Total,Usuario,Estado\n';
+    
+    ventas.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            const id = cells[0].textContent.trim();
+            const fecha = cells[1].textContent.split('\n')[0].trim();
+            const productos = cells[2].textContent.replace('\n', ' ').trim();
+            const metodo = cells[3].textContent.trim();
+            const total = cells[4].textContent.split('\n')[0].trim();
+            const usuario = cells[5].textContent.trim();
+            const estado = cells[6].textContent.trim();
+            
+            csvContent += `"${id}","${fecha}","${productos}","${metodo}","${total}","${usuario}","${estado}"\n`;
+        }
+    });
+    
+    // Descargar CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ventas_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function cargarMasVentas() {
+    // Implementar carga de más ventas con AJAX
+    alert('Función de carga adicional en desarrollo. Por ahora usa los filtros de fecha para ver ventas anteriores.');
+}
+
+function verDetallesRapidos(idVenta) {
+    // Construir URL dinámicamente
+    const baseUrl = "{{ url_for('venta.detalle', id_empresa=id_empresa, id_venta=1) }}".replace('/1', '');
+    const url = baseUrl + '/' + idVenta + '?ajax=1';
+    
+    fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('contenidoDetalles').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('modalDetallesRapidos')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los detalles');
+        });
+}
+
+// Establecer fecha de hoy por defecto si no hay filtros
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaHasta = document.getElementById('hasta');
+    if (!fechaHasta.value) {
+        fechaHasta.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Auto-refresh cada 30 segundos si estamos viendo ventas de hoy
+    const fechaDesde = '{{ fecha_desde or "" }}';
+    const esHoy = fechaHasta.value === new Date().toISOString().split('T')[0];
+    if (esHoy && (!fechaDesde || fechaDesde === fechaHasta.value)) {
+        let autoRefreshInterval = setInterval(function() {
+            // Solo auto-refresh si la página está visible
+            if (!document.hidden) {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-info position-fixed top-0 end-0 m-3';
+                badge.textContent = 'Actualizando...';
+                document.body.appendChild(badge);
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        }, 60000); // Cada minuto
+        
+        // Detener auto-refresh si el usuario navega
+        window.addEventListener('beforeunload', function() {
+            clearInterval(autoRefreshInterval);
+        });
+    }
+    
+    // Atajos de teclado
+    document.addEventListener('keydown', function(e) {
+        // Ctrl + E para exportar
+        if (e.ctrlKey && e.key === 'e') {
+            e.preventDefault();
+            exportarVentas();
+        }
+        
+        // Ctrl + P para imprimir
+        if (e.ctrlKey && e.key === 'p') {
+            e.preventDefault();
+            window.print();
+        }
+        
+        // F5 para actualizar (comportamiento por defecto, solo mensaje)
+        if (e.key === 'F5') {
+            const badge = document.createElement('div');
+            badge.className = 'alert alert-info alert-dismissible position-fixed top-0 start-50 translate-middle-x';
+            badge.style.zIndex = '9999';
+            badge.innerHTML = `
+                <strong>🔄 Actualizando historial...</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(badge);
+            
+            setTimeout(() => {
+                badge.remove();
+            }, 2000);
+        }
+    });
+});
+
+// Validación del formulario de anulación
+document.getElementById('formAnular').addEventListener('submit', function(e) {
+    const motivo = document.getElementById('motivoAnulacion').value.trim();
+    const confirmacion = document.getElementById('confirmarAnulacion').checked;
+    
+    if (motivo.length < 10) {
+        e.preventDefault();
+        alert('El motivo debe tener al menos 10 caracteres');
+        document.getElementById('motivoAnulacion').focus();
+        return false;
+    }
+    
+    if (!confirmacion) {
+        e.preventDefault();
+        alert('Debes confirmar que deseas anular la venta');
+        document.getElementById('confirmarAnulacion').focus();
+        return false;
+    }
+    
+    const confirmFinal = confirm('¿Estás COMPLETAMENTE SEGURO de anular esta venta? Esta acción NO se puede deshacer y restaurará el stock de los productos.');
+    
+    if (confirmFinal) {
+        // Deshabilitar botón para evitar doble envío
+        const btnSubmit = this.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '⏳ Anulando...';
+    }
+    
+    return confirmFinal;
+});
+
+// Mejorar experiencia visual
+function resaltarFila(elemento) {
+    elemento.style.transform = 'scale(1.02)';
+    elemento.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+    elemento.style.transition = 'all 0.2s ease';
+}
+
+function quitarResalte(elemento) {
+    elemento.style.transform = '';
+    elemento.style.boxShadow = '';
+}
+
+// Aplicar efectos hover a las filas
+document.querySelectorAll('tbody tr').forEach(fila => {
+    fila.addEventListener('mouseenter', () => resaltarFila(fila));
+    fila.addEventListener('mouseleave', () => quitarResalte(fila));
+});
+</script>
+
+<!-- Estilos adicionales -->
+<style>
+.table-danger td {
+    background-color: #f8d7da !important;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+@media print {
+    .btn, .card-header, .modal, .alert {
+        display: none !important;
+    }
+    
+    .table {
+        font-size: 0.8rem;
+    }
+}
+
+/* Animación para filas de ventas anuladas */
+.table-danger {
+    animation: pulseRed 3s infinite;
+}
+
+@keyframes pulseRed {
+    0% { background-color: #f8d7da; }
+    50% { background-color: #f1aeb5; }
+    100% { background-color: #f8d7da; }
+}
+
+/* Indicador de auto-refresh */
+.auto-refresh-indicator {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1050;
+    background: rgba(0, 123, 255, 0.1);
+    border: 1px solid #007bff;
+    border-radius: 50px;
+    padding: 5px 15px;
+    font-size: 0.8rem;
+    color: #007bff;
+}
+
+/* Scroll suave */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Highlight para búsqueda */
+.highlight {
+    background-color: yellow;
+    font-weight: bold;
+}
+</style>
+
+<!-- Información de atajos -->
+<div class="position-fixed bottom-0 start-0 p-2" style="z-index: 1040;">
+    <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#atajosInfo">
+        ⌨️
+    </button>
+    <div class="collapse" id="atajosInfo">
+        <div class="card mt-2" style="width: 250px;">
+            <div class="card-body p-2">
+                <h6 class="card-title mb-2">Atajos de Teclado</h6>
+                <ul class="list-unstyled mb-0 small">
+                    <li><kbd>Ctrl + E</kbd> - Exportar CSV</li>
+                    <li><kbd>Ctrl + P</kbd> - Imprimir</li>
+                    <li><kbd>F5</kbd> - Actualizar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

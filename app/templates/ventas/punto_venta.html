@@ -1,0 +1,555 @@
+{% extends "base.html" %}
+
+{% block title %}Punto de Venta - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="row h-100">
+    <!-- Panel Izquierdo - Productos y Carrito -->
+    <div class="col-lg-8">
+        <!-- Header con búsqueda -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h4 class="mb-0">🛒 Punto de Venta</h4>
+                        <small class="text-muted">{{ resumen_hoy.fecha.strftime('%d/%m/%Y') }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" 
+                                   id="buscarProducto" 
+                                   class="form-control" 
+                                   placeholder="Buscar producto por nombre o código..."
+                                   autocomplete="off">
+                            <button class="btn btn-primary" type="button" onclick="buscarProducto()">
+                                🔍
+                            </button>
+                        </div>
+                        <div id="resultadosBusqueda" class="position-absolute bg-white border rounded shadow-sm w-100" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carrito de Compras -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">🛒 Carrito</h5>
+                <button class="btn btn-outline-danger btn-sm" onclick="limpiarCarrito()">
+                    🗑️ Limpiar
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div id="carritoVacio" class="text-center py-4">
+                    <i class="display-4 text-muted">🛒</i>
+                    <p class="text-muted">El carrito está vacío</p>
+                    <p class="small text-muted">Busca y selecciona productos para comenzar</p>
+                </div>
+                <div id="tablaCarrito" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th width="100">Precio</th>
+                                    <th width="120">Cantidad</th>
+                                    <th width="100">Subtotal</th>
+                                    <th width="50"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsCarrito">
+                                <!-- Los items se agregan dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Disponibles -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📦 Productos Disponibles</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="gridProductos">
+                    {% for producto in productos %}
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <div class="card h-100 product-card" 
+                             onclick="agregarAlCarrito('{{ producto.id_producto }}', '{{ producto.nombre }}', {{ producto.precio }}, {{ producto.stock }})"
+                             style="cursor: pointer;">
+                            <div class="card-body text-center">
+                                <div class="display-6 mb-2">📦</div>
+                                <h6 class="card-title">{{ producto.nombre }}</h6>
+                                <p class="text-success fw-bold">${{ "{:,}".format(producto.precio) }}</p>
+                                <small class="text-muted">Stock: {{ producto.stock }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if not productos %}
+                <div class="text-center py-4">
+                    <i class="display-4 text-muted">📦</i>
+                    <p class="text-muted">No hay productos disponibles</p>
+                    <a href="{{ url_for('producto.crear', id_empresa=id_empresa) }}" class="btn btn-success">
+                        ➕ Agregar Productos
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Derecho - Totales y Pago -->
+    <div class="col-lg-4">
+        <!-- Resumen del Día -->
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">📊 Resumen de Hoy</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="fs-4 text-primary">{{ resumen_hoy.total_ventas }}</div>
+                        <small class="text-muted">Ventas</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-4 text-success">${{ "{:,}".format(resumen_hoy.total_ingresos) }}</div>
+                        <small class="text-muted">Ingresos</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-4 text-info">{{ resumen_hoy.total_productos }}</div>
+                        <small class="text-muted">Productos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Totales -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">💰 Total</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Subtotal:</label>
+                    </div>
+                    <div class="col-6 text-end">
+                        <span id="subtotalDisplay" class="fs-5">$0</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="descuento" class="form-label">Descuento (%):</label>
+                    </div>
+                    <div class="col-6">
+                        <input type="number" 
+                               id="descuento" 
+                               class="form-control form-control-sm text-end" 
+                               value="0" 
+                               min="0" 
+                               max="50" 
+                               step="0.1"
+                               onchange="calcularTotales()">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Descuento:</label>
+                    </div>
+                    <div class="col-6 text-end">
+                        <span id="descuentoDisplay" class="text-danger">-$0</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-6">
+                        <strong class="fs-5">TOTAL:</strong>
+                    </div>
+                    <div class="col-6 text-end">
+                        <strong id="totalDisplay" class="fs-3 text-success">$0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métodos de Pago -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">💳 Método de Pago</h6>
+                <a href="{{ url_for('venta.metodos_pago', id_empresa=id_empresa) }}" class="btn btn-outline-primary btn-sm">
+                    ⚙️ Configurar
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% for metodo in metodos_pago %}
+                    <button type="button" 
+                            class="btn btn-outline-primary metodo-pago" 
+                            data-metodo="{{ metodo.nombre }}"
+                            onclick="seleccionarMetodoPago('{{ metodo.nombre }}', this)">
+                        {{ metodo.nombre }}
+                    </button>
+                    {% endfor %}
+                </div>
+                <div id="metodoSeleccionado" class="mt-3 text-center text-muted small" style="display: none;">
+                    Método seleccionado: <span id="nombreMetodo" class="fw-bold"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button id="btnProcesarVenta" 
+                            class="btn btn-success btn-lg" 
+                            onclick="procesarVenta()" 
+                            disabled>
+                        🛒 PROCESAR VENTA
+                    </button>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-secondary w-100" onclick="limpiarCarrito()">
+                                🗑️ Limpiar
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <a href="{{ url_for('venta.historial', id_empresa=id_empresa) }}" class="btn btn-info w-100">
+                                📋 Historial
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Venta -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">✅ Venta Procesada</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="display-1 text-success mb-3">✅</div>
+                <h4 id="mensajeVenta">Venta procesada exitosamente</h4>
+                <p class="text-muted">La venta ha sido registrada y el inventario actualizado</p>
+                
+                <div class="card bg-light mt-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Total Venta:</strong>
+                            </div>
+                            <div class="col-6 text-end">
+                                <strong id="totalVentaFinal" class="text-success"></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="nuevaVenta()">
+                    🛒 Nueva Venta
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+<!-- Estilos CSS -->
+<style>
+.product-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #dee2e6;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+.metodo-pago.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+#resultadosBusqueda {
+    top: 100%;
+    left: 0;
+    right: 0;
+}
+
+.resultado-busqueda {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.resultado-busqueda:hover {
+    background-color: #f8f9fa;
+}
+
+.cantidad-input {
+    width: 70px;
+}
+</style>
+
+<!-- JavaScript para funcionalidad del POS -->
+<script>
+let carrito = [];
+let metodoSeleccionado = '';
+
+// Cargar datos al iniciar
+document.addEventListener('DOMContentLoaded', function() {
+    calcularTotales();
+    
+    // Búsqueda en tiempo real
+    document.getElementById('buscarProducto').addEventListener('input', function() {
+        const termino = this.value.trim();
+        if (termino.length >= 2) {
+            buscarProductoEnTiempoReal(termino);
+        } else {
+            document.getElementById('resultadosBusqueda').style.display = 'none';
+        }
+    });
+    
+    // Ocultar resultados al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('buscarProducto').contains(e.target)) {
+            document.getElementById('resultadosBusqueda').style.display = 'none';
+        }
+    });
+});
+
+function buscarProductoEnTiempoReal(termino) {
+    fetch(`{{ url_for('venta.buscar_producto', id_empresa=id_empresa) }}?q=${encodeURIComponent(termino)}`)
+        .then(response => response.json())
+        .then(productos => {
+            const resultados = document.getElementById('resultadosBusqueda');
+            resultados.innerHTML = '';
+            
+            if (productos.length > 0) {
+                productos.forEach(producto => {
+                    const div = document.createElement('div');
+                    div.className = 'resultado-busqueda';
+                    div.innerHTML = `
+                        <strong>${producto.nombre}</strong> - $${producto.precio.toLocaleString()}
+                        <br><small class="text-muted">ID: ${producto.id_producto} | Stock: ${producto.stock}</small>
+                    `;
+                    div.onclick = () => {
+                        if (producto.disponible) {
+                            agregarAlCarrito(producto.id_producto, producto.nombre, producto.precio, producto.stock);
+                            document.getElementById('buscarProducto').value = '';
+                            resultados.style.display = 'none';
+                        } else {
+                            alert('Producto sin stock disponible');
+                        }
+                    };
+                    resultados.appendChild(div);
+                });
+                resultados.style.display = 'block';
+            } else {
+                resultados.innerHTML = '<div class="resultado-busqueda text-muted">No se encontraron productos</div>';
+                resultados.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error en búsqueda:', error);
+        });
+}
+
+function agregarAlCarrito(idProducto, nombre, precio, stockDisponible) {
+    // Verificar si ya existe en el carrito
+    const itemExistente = carrito.find(item => item.id_producto === idProducto);
+    
+    if (itemExistente) {
+        // Verificar stock disponible
+        if (itemExistente.cantidad < stockDisponible) {
+            itemExistente.cantidad++;
+            actualizarVisualizacionCarrito();
+            calcularTotales();
+        } else {
+            alert(`Stock insuficiente. Máximo disponible: ${stockDisponible}`);
+        }
+    } else {
+        // Agregar nuevo item
+        carrito.push({
+            id_producto: idProducto,
+            nombre: nombre,
+            precio: precio,
+            cantidad: 1,
+            stock_disponible: stockDisponible
+        });
+        actualizarVisualizacionCarrito();
+        calcularTotales();
+    }
+}
+
+function actualizarVisualizacionCarrito() {
+    const carritoVacio = document.getElementById('carritoVacio');
+    const tablaCarrito = document.getElementById('tablaCarrito');
+    const itemsCarrito = document.getElementById('itemsCarrito');
+    
+    if (carrito.length === 0) {
+        carritoVacio.style.display = 'block';
+        tablaCarrito.style.display = 'none';
+    } else {
+        carritoVacio.style.display = 'none';
+        tablaCarrito.style.display = 'block';
+        
+        itemsCarrito.innerHTML = '';
+        carrito.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <strong>${item.nombre}</strong><br>
+                    <small class="text-muted">ID: ${item.id_producto}</small>
+                </td>
+                <td>$${item.precio.toLocaleString()}</td>
+                <td>
+                    <div class="input-group input-group-sm">
+                        <button class="btn btn-outline-secondary" onclick="cambiarCantidad(${index}, -1)">-</button>
+                        <input type="number" class="form-control text-center cantidad-input" 
+                               value="${item.cantidad}" min="1" max="${item.stock_disponible}"
+                               onchange="setCantidad(${index}, this.value)">
+                        <button class="btn btn-outline-secondary" onclick="cambiarCantidad(${index}, 1)">+</button>
+                    </div>
+                </td>
+                <td class="fw-bold">$${(item.precio * item.cantidad).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-outline-danger btn-sm" onclick="eliminarItem(${index})">🗑️</button>
+                </td>
+            `;
+            itemsCarrito.appendChild(row);
+        });
+    }
+    
+    validarBotonVenta();
+}
+
+function cambiarCantidad(index, cambio) {
+    const item = carrito[index];
+    const nuevaCantidad = item.cantidad + cambio;
+    
+    if (nuevaCantidad > 0 && nuevaCantidad <= item.stock_disponible) {
+        item.cantidad = nuevaCantidad;
+        actualizarVisualizacionCarrito();
+        calcularTotales();
+    } else if (nuevaCantidad > item.stock_disponible) {
+        alert(`Stock insuficiente. Máximo disponible: ${item.stock_disponible}`);
+    }
+}
+
+function setCantidad(index, nuevaCantidad) {
+    nuevaCantidad = parseInt(nuevaCantidad);
+    const item = carrito[index];
+    
+    if (nuevaCantidad > 0 && nuevaCantidad <= item.stock_disponible) {
+        item.cantidad = nuevaCantidad;
+        calcularTotales();
+    } else {
+        // Restaurar valor anterior
+        actualizarVisualizacionCarrito();
+        if (nuevaCantidad > item.stock_disponible) {
+            alert(`Stock insuficiente. Máximo disponible: ${item.stock_disponible}`);
+        }
+    }
+}
+
+function eliminarItem(index) {
+    carrito.splice(index, 1);
+    actualizarVisualizacionCarrito();
+    calcularTotales();
+}
+
+function limpiarCarrito() {
+    if (carrito.length > 0) {
+        if (confirm('¿Estás seguro de que quieres limpiar el carrito?')) {
+            carrito = [];
+            actualizarVisualizacionCarrito();
+            calcularTotales();
+            metodoSeleccionado = '';
+            document.querySelectorAll('.metodo-pago').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('metodoSeleccionado').style.display = 'none';
+        }
+    }
+}
+
+function calcularTotales() {
+    const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    const descuentoPorcentaje = parseFloat(document.getElementById('descuento').value) || 0;
+    const descuentoValor = (subtotal * descuentoPorcentaje) / 100;
+    const total = subtotal - descuentoValor;
+    
+    document.getElementById('subtotalDisplay').textContent = '$' + subtotal.toLocaleString();
+    document.getElementById('descuentoDisplay').textContent = '-$' + descuentoValor.toLocaleString();
+    document.getElementById('totalDisplay').textContent = '$' + total.toLocaleString();
+    
+    validarBotonVenta();
+}
+
+function seleccionarMetodoPago(metodo, boton) {
+    // Remover selección anterior
+    document.querySelectorAll('.metodo-pago').forEach(btn => btn.classList.remove('active'));
+    
+    // Seleccionar nuevo método
+    boton.classList.add('active');
+    metodoSeleccionado = metodo;
+    
+    // Mostrar método seleccionado
+    document.getElementById('nombreMetodo').textContent = metodo;
+    document.getElementById('metodoSeleccionado').style.display = 'block';
+    
+    validarBotonVenta();
+}
+
+function validarBotonVenta() {
+    const btnProcesar = document.getElementById('btnProcesarVenta');
+    const tieneProductos = carrito.length > 0;
+    const tieneMetodo = metodoSeleccionado !== '';
+    
+    btnProcesar.disabled = !(tieneProductos && tieneMetodo);
+}
+
+function procesarVenta() {
+    if (carrito.length === 0) {
+        alert('El carrito está vacío');
+        return;
+    }
+    
+    if (!metodoSeleccionado) {
+        alert('Debe seleccionar un método de pago');
+        return;
+    }
+    
+    const descuento = parseFloat(document.getElementById('descuento').value) || 0;
+    
+    const datosVenta = {
+        items: carrito.map(item => ({
+            id_producto: item.id_producto,
+            cantidad: item.cantidad,
+            precio: item.precio
+        })),
+        metodo_pago: metodoSeleccionado,
+        descuento: descuento
