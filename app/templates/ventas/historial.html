@@ -180,6 +180,12 @@
                                    class="btn btn-outline-info" title="Ver detalles">
                                     👁️
                                 </a>
+                                <a href="{{ url_for('venta.generar_factura', id_empresa=id_empresa, id_venta=venta.id_venta) }}" 
+                                   class="btn btn-outline-success" 
+                                   title="Generar factura"
+                                   target="_blank">
+                                    📄
+                                </a>
                                 {% if 'ANULADA' not in venta.metodo_pago %}
                                 <button class="btn btn-outline-warning" 
                                         title="Anular venta"

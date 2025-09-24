@@ -272,10 +272,6 @@
     </div>
 </div>
 
-{% endblock %}
-
-
-<!-- Estilos CSS -->
 <style>
 .product-card {
     transition: transform 0.2s, box-shadow 0.2s;
@@ -315,16 +311,13 @@
 }
 </style>
 
-<!-- JavaScript para funcionalidad del POS -->
 <script>
 let carrito = [];
 let metodoSeleccionado = '';
 
-// Cargar datos al iniciar
 document.addEventListener('DOMContentLoaded', function() {
     calcularTotales();
     
-    // Búsqueda en tiempo real
     document.getElementById('buscarProducto').addEventListener('input', function() {
         const termino = this.value.trim();
         if (termino.length >= 2) {
@@ -334,7 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Ocultar resultados al hacer clic fuera
     document.addEventListener('click', function(e) {
         if (!document.getElementById('buscarProducto').contains(e.target)) {
             document.getElementById('resultadosBusqueda').style.display = 'none';
@@ -343,7 +335,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function buscarProductoEnTiempoReal(termino) {
-    fetch(`{{ url_for('venta.buscar_producto', id_empresa=id_empresa) }}?q=${encodeURIComponent(termino)}`)
+    const url = "{{ url_for('venta.buscar_producto', id_empresa=id_empresa) }}" + '?q=' + encodeURIComponent(termino);
+    
+    fetch(url)
         .then(response => response.json())
         .then(productos => {
             const resultados = document.getElementById('resultadosBusqueda');
@@ -353,10 +347,7 @@ function buscarProductoEnTiempoReal(termino) {
                 productos.forEach(producto => {
                     const div = document.createElement('div');
                     div.className = 'resultado-busqueda';
-                    div.innerHTML = `
-                        <strong>${producto.nombre}</strong> - $${producto.precio.toLocaleString()}
-                        <br><small class="text-muted">ID: ${producto.id_producto} | Stock: ${producto.stock}</small>
-                    `;
+                    div.innerHTML = '<strong>' + producto.nombre + '</strong> - $' + producto.precio.toLocaleString() + '<br><small class="text-muted">ID: ' + producto.id_producto + ' | Stock: ' + producto.stock + '</small>';
                     div.onclick = () => {
                         if (producto.disponible) {
                             agregarAlCarrito(producto.id_producto, producto.nombre, producto.precio, producto.stock);
@@ -380,20 +371,17 @@ function buscarProductoEnTiempoReal(termino) {
 }
 
 function agregarAlCarrito(idProducto, nombre, precio, stockDisponible) {
-    // Verificar si ya existe en el carrito
     const itemExistente = carrito.find(item => item.id_producto === idProducto);
     
     if (itemExistente) {
-        // Verificar stock disponible
         if (itemExistente.cantidad < stockDisponible) {
             itemExistente.cantidad++;
             actualizarVisualizacionCarrito();
             calcularTotales();
         } else {
-            alert(`Stock insuficiente. Máximo disponible: ${stockDisponible}`);
+            alert('Stock insuficiente. Máximo disponible: ' + stockDisponible);
         }
     } else {
-        // Agregar nuevo item
         carrito.push({
             id_producto: idProducto,
             nombre: nombre,
@@ -421,26 +409,7 @@ function actualizarVisualizacionCarrito() {
         itemsCarrito.innerHTML = '';
         carrito.forEach((item, index) => {
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>
-                    <strong>${item.nombre}</strong><br>
-                    <small class="text-muted">ID: ${item.id_producto}</small>
-                </td>
-                <td>$${item.precio.toLocaleString()}</td>
-                <td>
-                    <div class="input-group input-group-sm">
-                        <button class="btn btn-outline-secondary" onclick="cambiarCantidad(${index}, -1)">-</button>
-                        <input type="number" class="form-control text-center cantidad-input" 
-                               value="${item.cantidad}" min="1" max="${item.stock_disponible}"
-                               onchange="setCantidad(${index}, this.value)">
-                        <button class="btn btn-outline-secondary" onclick="cambiarCantidad(${index}, 1)">+</button>
-                    </div>
-                </td>
-                <td class="fw-bold">$${(item.precio * item.cantidad).toLocaleString()}</td>
-                <td>
-                    <button class="btn btn-outline-danger btn-sm" onclick="eliminarItem(${index})">🗑️</button>
-                </td>
-            `;
+            row.innerHTML = '<td><strong>' + item.nombre + '</strong><br><small class="text-muted">ID: ' + item.id_producto + '</small></td><td>$' + item.precio.toLocaleString() + '</td><td><div class="input-group input-group-sm"><button class="btn btn-outline-secondary" onclick="cambiarCantidad(' + index + ', -1)">-</button><input type="number" class="form-control text-center cantidad-input" value="' + item.cantidad + '" min="1" max="' + item.stock_disponible + '" onchange="setCantidad(' + index + ', this.value)"><button class="btn btn-outline-secondary" onclick="cambiarCantidad(' + index + ', 1)">+</button></div></td><td class="fw-bold">$' + (item.precio * item.cantidad).toLocaleString() + '</td><td><button class="btn btn-outline-danger btn-sm" onclick="eliminarItem(' + index + ')">🗑️</button></td>';
             itemsCarrito.appendChild(row);
         });
     }
@@ -457,7 +426,7 @@ function cambiarCantidad(index, cambio) {
         actualizarVisualizacionCarrito();
         calcularTotales();
     } else if (nuevaCantidad > item.stock_disponible) {
-        alert(`Stock insuficiente. Máximo disponible: ${item.stock_disponible}`);
+        alert('Stock insuficiente. Máximo disponible: ' + item.stock_disponible);
     }
 }
 
@@ -469,10 +438,9 @@ function setCantidad(index, nuevaCantidad) {
         item.cantidad = nuevaCantidad;
         calcularTotales();
     } else {
-        // Restaurar valor anterior
         actualizarVisualizacionCarrito();
         if (nuevaCantidad > item.stock_disponible) {
-            alert(`Stock insuficiente. Máximo disponible: ${item.stock_disponible}`);
+            alert('Stock insuficiente. Máximo disponible: ' + item.stock_disponible);
         }
     }
 }
@@ -510,14 +478,11 @@ function calcularTotales() {
 }
 
 function seleccionarMetodoPago(metodo, boton) {
-    // Remover selección anterior
     document.querySelectorAll('.metodo-pago').forEach(btn => btn.classList.remove('active'));
     
-    // Seleccionar nuevo método
     boton.classList.add('active');
     metodoSeleccionado = metodo;
     
-    // Mostrar método seleccionado
     document.getElementById('nombreMetodo').textContent = metodo;
     document.getElementById('metodoSeleccionado').style.display = 'block';
     
@@ -553,3 +518,82 @@ function procesarVenta() {
         })),
         metodo_pago: metodoSeleccionado,
         descuento: descuento
+    };
+    
+    const btnProcesar = document.getElementById('btnProcesarVenta');
+    btnProcesar.disabled = true;
+    btnProcesar.innerHTML = '⏳ Procesando...';
+    
+    const url = "{{ url_for('venta.procesar_venta', id_empresa=id_empresa) }}";
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datosVenta)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('mensajeVenta').textContent = data.message;
+            document.getElementById('totalVentaFinal').textContent = '$' + data.total.toLocaleString();
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+            modal.show();
+            
+            carrito = [];
+            metodoSeleccionado = '';
+            document.getElementById('descuento').value = '0';
+            actualizarVisualizacionCarrito();
+            calcularTotales();
+            document.querySelectorAll('.metodo-pago').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('metodoSeleccionado').style.display = 'none';
+            
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la venta');
+    })
+    .finally(() => {
+        btnProcesar.disabled = false;
+        btnProcesar.innerHTML = '🛒 PROCESAR VENTA';
+        validarBotonVenta();
+    });
+}
+
+function nuevaVenta() {
+    bootstrap.Modal.getInstance(document.getElementById('modalConfirmacion')).hide();
+    document.getElementById('buscarProducto').focus();
+}
+
+function buscarProducto() {
+    const termino = document.getElementById('buscarProducto').value.trim();
+    if (termino) {
+        buscarProductoEnTiempoReal(termino);
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        if (!document.getElementById('btnProcesarVenta').disabled) {
+            procesarVenta();
+        }
+    }
+    
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        limpiarCarrito();
+    }
+    
+    if (e.key === 'F1') {
+        e.preventDefault();
+        document.getElementById('buscarProducto').focus();
+    }
+});
+</script>
+{% endblock %}

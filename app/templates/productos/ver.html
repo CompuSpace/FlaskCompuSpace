@@ -1,156 +1,261 @@
 {% extends "base.html" %}
 
-{% block title %}Crear Producto - Sistema de Inventario{% endblock %}
+{% block title %}{{ producto.nombre }} - Sistema de Inventario{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">➕ Nuevo Producto</h4>
-                <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" class="btn btn-outline-light btn-sm">
-                    📦 Ver Productos
-                </a>
+<div class="row">
+    <div class="col-md-8">
+        <!-- Información principal del producto -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">📦 {{ producto.nombre }}</h4>
+                <div>
+                    <a href="{{ url_for('producto.editar', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                       class="btn btn-outline-light btn-sm me-2">
+                        ✏️ Editar
+                    </a>
+                    <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" 
+                       class="btn btn-outline-light btn-sm">
+                        📋 Lista
+                    </a>
+                </div>
             </div>
             
             <div class="card-body">
-                <form method="POST">
-                    {{ form.hidden_tag() }}
-
-                    <!-- ID del Producto -->
-                    <div class="mb-3">
-                        {{ form.id_producto.label(class="form-label") }}
-                        {{ form.id_producto(class="form-control" + (" is-invalid" if form.id_producto.errors else "")) }}
-                        {% if form.id_producto.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.id_producto.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">
-                            <i class="text-info">💡 Debe ser único en tu empresa. Ej: PROD001, SKU123</i>
-                        </div>
-                    </div>
-
-                    <!-- Nombre -->
-                    <div class="mb-3">
-                        {{ form.nombre.label(class="form-label") }}
-                        {{ form.nombre(class="form-control" + (" is-invalid" if form.nombre.errors else "")) }}
-                        {% if form.nombre.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.nombre.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Descripción -->
-                    <div class="mb-3">
-                        {{ form.descripcion.label(class="form-label") }}
-                        {{ form.descripcion(class="form-control" + (" is-invalid" if form.descripcion.errors else "")) }}
-                        {% if form.descripcion.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.descripcion.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">
-                            <i class="text-muted">Opcional - Describe las características del producto</i>
-                        </div>
-                    </div>
-
-                    <!-- Precio y Stock en la misma fila -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.precio.label(class="form-label") }}
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.precio(class="form-control" + (" is-invalid" if form.precio.errors else "")) }}
-                                </div>
-                                {% if form.precio.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.precio.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.stock.label(class="form-label") }}
-                                <div class="input-group">
-                                    {{ form.stock(class="form-control" + (" is-invalid" if form.stock.errors else "")) }}
-                                    <span class="input-group-text">unidades</span>
-                                </div>
-                                {% if form.stock.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.stock.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Información adicional -->
-                    <div class="alert alert-info">
-                        <h6 class="alert-heading">ℹ️ Información:</h6>
-                        <ul class="mb-0 small">
-                            <li>El <strong>ID del producto</strong> debe ser único en tu empresa</li>
-                            <li>El <strong>precio</strong> se registra en pesos colombianos</li>
-                            <li>El <strong>stock inicial</strong> se registrará como movimiento de entrada</li>
-                            <li>Todos los campos son obligatorios excepto la descripción</li>
-                        </ul>
-                    </div>
-
-                    <!-- Botones -->
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" class="btn btn-secondary">
-                            ← Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            💾 Crear Producto
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Card de ayuda -->
-        <div class="card mt-4 border-info">
-            <div class="card-header bg-info text-white">
-                <h6 class="mb-0">💡 Consejos para IDs de Productos</h6>
-            </div>
-            <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6 class="text-success">✅ Buenos ejemplos:</h6>
-                        <ul class="small">
-                            <li><code>PROD001</code> - Secuencial</li>
-                            <li><code>LAP001</code> - Por categoría</li>
-                            <li><code>SKU123</code> - SKU personalizado</li>
-                            <li><code>CEL-SAM-A54</code> - Descriptivo</li>
-                        </ul>
+                        <h6 class="text-muted">IDENTIFICACIÓN</h6>
+                        <div class="mb-3">
+                            <strong>ID del Producto:</strong><br>
+                            <code class="fs-5">{{ producto.id_producto }}</code>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Nombre:</strong><br>
+                            <span class="fs-5">{{ producto.nombre }}</span>
+                        </div>
+
+                        {% if producto.descripcion %}
+                        <div class="mb-3">
+                            <strong>Descripción:</strong><br>
+                            <p class="text-muted">{{ producto.descripcion }}</p>
+                        </div>
+                        {% endif %}
                     </div>
+
                     <div class="col-md-6">
-                        <h6 class="text-danger">❌ Evita:</h6>
-                        <ul class="small">
-                            <li>IDs muy largos</li>
-                            <li>Caracteres especiales raros</li>
-                            <li>Espacios en blanco</li>
-                            <li>Solo números (puede confundir)</li>
-                        </ul>
+                        <h6 class="text-muted">PRECIO E INVENTARIO</h6>
+                        <div class="mb-3">
+                            <strong>Precio:</strong><br>
+                            <span class="fs-4 text-success fw-bold">${{ "{:,}".format(producto.precio) }}</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Stock Actual:</strong><br>
+                            {% if producto.stock <= 0 %}
+                                <span class="fs-4 badge bg-danger">{{ producto.stock }} unidades</span>
+                            {% elif producto.stock <= 5 %}
+                                <span class="fs-4 badge bg-warning text-dark">{{ producto.stock }} unidades</span>
+                            {% elif producto.stock <= 10 %}
+                                <span class="fs-4 badge bg-info">{{ producto.stock }} unidades</span>
+                            {% else %}
+                                <span class="fs-4 badge bg-success">{{ producto.stock }} unidades</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Estado:</strong><br>
+                            {% if producto.stock <= 0 %}
+                                <span class="badge bg-danger fs-6">❌ Sin Stock</span>
+                            {% elif producto.stock <= 5 %}
+                                <span class="badge bg-warning text-dark fs-6">⚠️ Stock Crítico</span>
+                            {% elif producto.stock <= 10 %}
+                                <span class="badge bg-info fs-6">📊 Stock Bajo</span>
+                            {% else %}
+                                <span class="badge bg-success fs-6">✅ Disponible</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Valor Total en Inventario:</strong><br>
+                            <span class="fs-5 text-primary fw-bold">${{ "{:,}".format(producto.precio * producto.stock) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Historial de movimientos (si existe la relación) -->
+        {% if producto.movimientos %}
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">📈 Historial de Movimientos</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Cantidad</th>
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movimiento in producto.movimientos[-10:] %}
+                            <tr>
+                                <td>{{ movimiento.fecha_hora }}</td>
+                                <td>
+                                    {% if movimiento.tipo_movimiento == 'ENTRADA' %}
+                                        <span class="badge bg-success">⬆️ Entrada</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">⬇️ Salida</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ movimiento.cantidad }}</td>
+                                <td>{{ movimiento.usuario.nom_usuario if movimiento.usuario else 'Sistema' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if producto.movimientos|length > 10 %}
+                <small class="text-muted">Mostrando los últimos 10 movimientos de {{ producto.movimientos|length }} total.</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Panel de acciones -->
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">⚡ Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('producto.editar', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                       class="btn btn-primary">
+                        ✏️ Editar Producto
+                    </a>
+                    
+                    <a href="{{ url_for('producto.ajustar_stock', id_empresa=id_empresa, id_producto=producto.id_producto) }}" 
+                       class="btn btn-warning">
+                        📊 Ajustar Stock
+                    </a>
+                    
+                    <hr>
+                    
+                    <button type="button" 
+                            class="btn btn-outline-danger"
+                            onclick="confirmarEliminacion()">
+                        🗑️ Eliminar Producto
+                    </button>
+                    
+                    <a href="{{ url_for('producto.listar', id_empresa=id_empresa) }}" 
+                       class="btn btn-secondary">
+                        ← Volver a Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="card shadow-sm border-info">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">📊 Estadísticas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="fs-4 text-success fw-bold">${{ "{:,}".format(producto.precio) }}</div>
+                            <small class="text-muted">Precio Unitario</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="fs-4 text-primary fw-bold">{{ producto.stock }}</div>
+                        <small class="text-muted">En Stock</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <div class="fs-5 text-info fw-bold">${{ "{:,}".format(producto.precio * producto.stock) }}</div>
+                    <small class="text-muted">Valor Total</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado del stock -->
+        <div class="card shadow-sm mt-3">
+            <div class="card-body text-center">
+                {% if producto.stock <= 0 %}
+                    <div class="text-danger">
+                        <i class="display-4">❌</i>
+                        <h6>Sin Stock</h6>
+                        <p class="small text-muted mb-0">El producto no está disponible</p>
+                    </div>
+                {% elif producto.stock <= 5 %}
+                    <div class="text-warning">
+                        <i class="display-4">⚠️</i>
+                        <h6>Stock Crítico</h6>
+                        <p class="small text-muted mb-0">Considera reabastecer pronto</p>
+                    </div>
+                {% elif producto.stock <= 10 %}
+                    <div class="text-info">
+                        <i class="display-4">📊</i>
+                        <h6>Stock Bajo</h6>
+                        <p class="small text-muted mb-0">Monitorear niveles</p>
+                    </div>
+                {% else %}
+                    <div class="text-success">
+                        <i class="display-4">✅</i>
+                        <h6>Stock Normal</h6>
+                        <p class="small text-muted mb-0">Nivel adecuado</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="confirmarEliminarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🗑️ Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar el producto:</p>
+                <p><strong>{{ producto.nombre }} (ID: {{ producto.id_producto }})</strong></p>
+                <div class="alert alert-danger">
+                    <strong>⚠️ Advertencia:</strong>
+                    <ul class="mb-0">
+                        <li>Esta acción no se puede deshacer</li>
+                        <li>Se perderá todo el historial del producto</li>
+                        {% if producto.stock > 0 %}
+                        <li>Se registrará una salida de {{ producto.stock }} unidades</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('producto.eliminar', id_empresa=id_empresa, id_producto=producto.id_producto) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">🗑️ Eliminar Definitivamente</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarEliminacion() {
+    new bootstrap.Modal(document.getElementById('confirmarEliminarModal')).show();
+}
+</script>
 {% endblock %}

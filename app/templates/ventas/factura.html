@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura POS - {{ venta.id_venta }}</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: black;
+        }
+        
+        .factura {
+            width: 300px;
+            margin: 0 auto;
+            border: 2px solid #000;
+            padding: 15px;
+            background-color: white;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+        
+        .empresa-nombre {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .empresa-info {
+            font-size: 10px;
+            margin: 2px 0;
+        }
+        
+        .factura-info {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .cliente-info {
+            margin: 10px 0;
+            font-size: 11px;
+        }
+        
+        .productos {
+            margin: 15px 0;
+            border-top: 1px dashed #000;
+            border-bottom: 1px dashed #000;
+            padding: 10px 0;
+        }
+        
+        .productos-header {
+            display: flex;
+            font-weight: bold;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+        }
+        
+        .producto-item {
+            display: flex;
+            margin: 3px 0;
+            align-items: flex-start;
+        }
+        
+        .ct {
+            width: 20px;
+            text-align: left;
+        }
+        
+        .descripcion {
+            flex: 1;
+            padding: 0 5px;
+        }
+        
+        .valor {
+            width: 70px;
+            text-align: right;
+        }
+        
+        .totales {
+            margin-top: 10px;
+            text-align: right;
+        }
+        
+        .total-line {
+            margin: 2px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .total-final {
+            font-size: 14px;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        
+        .forma-pago {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .cambio {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .footer {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 10px;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+        }
+        
+        .separador {
+            border-top: 1px dashed #000;
+            margin: 10px 0;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .factura {
+                border: none;
+                margin: 0;
+                padding: 10px;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="factura">
+        <!-- Header de la empresa -->
+        <div class="header">
+            <div class="empresa-nombre">{{ empresa_info.nombre or 'TU EMPRESA' }}</div>
+            <div class="empresa-info">{{ empresa_info.nit or '800200100-0' }}</div>
+            <div class="empresa-info">{{ empresa_info.direccion or 'Call 54 32 71' }}</div>
+            <div class="empresa-info">{{ empresa_info.ciudad or 'Bogotá' }} - Tels: / {{ empresa_info.telefono or '41512108' }}</div>
+            <div class="empresa-info">Resolución DIAN {{ empresa_info.resolucion or '191816549/8156' }}</div>
+            <div class="empresa-info">Autorizada el: {{ empresa_info.fecha_autorizacion or '2019/01/22' }} :</div>
+            <div class="empresa-info">Prefijo POS Del: {{ empresa_info.prefijo_desde or '1' }} Al:{{ empresa_info.prefijo_hasta or '1000000' }}</div>
+            <div class="empresa-info">Responsable de IVA</div>
+        </div>
+        
+        <!-- Información de la factura -->
+        <div class="factura-info">
+            <div>Factura de venta : POS - {{ venta.id_venta }}</div>
+        </div>
+        
+        <!-- Información del cliente y venta -->
+        <div class="cliente-info">
+            <div>Fecha : {{ venta.fecha_hora.strftime('%Y/%m/%d %H:%M') if not venta.fecha_hora is string else venta.fecha_hora }}</div>
+            <div>Cliente : {{ cliente_info.nombre or 'CUANTAS MENORES' }}</div>
+            <div>C.C / NIT : {{ cliente_info.documento or '222222222-0' }}</div>
+            <div>Dirección : {{ cliente_info.direccion or 'CALLE FALSA 123' }}</div>
+        </div>
+        
+        <div class="separador"></div>
+        
+        <!-- Productos -->
+        <div class="productos">
+            <div class="productos-header">
+                <div class="ct">CT</div>
+                <div class="descripcion">Descripción</div>
+                <div class="valor">Valor</div>
+            </div>
+            
+            {% for detalle in venta.detalles %}
+            <div class="producto-item">
+                <div class="ct">{{ detalle.cantidad }}</div>
+                <div class="descripcion">{{ detalle.producto.nombre }}</div>
+                <div class="valor">{{ "{:,}".format(detalle.subtotal) }}</div>
+            </div>
+            
+            <!-- Detalle del precio unitario si hay más de 1 -->
+            {% if detalle.cantidad > 1 %}
+            <div class="producto-item">
+                <div class="ct"></div>
+                <div class="descripcion">{{ detalle.cantidad }} x {{ "{:,}".format(detalle.precio_unitario) }}</div>
+                <div class="valor"></div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        
+        <div class="separador"></div>
+        
+        <!-- Totales -->
+        <div class="totales">
+            {% if venta.subtotal != venta.total %}
+            <div class="total-line">
+                <span>SUBTOTAL</span>
+                <span>{{ "{:,}".format(venta.subtotal) }}</span>
+            </div>
+            <div class="total-line">
+                <span>Descuento</span>
+                <span>-{{ "{:,}".format(venta.subtotal - venta.total) }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="total-final">
+                <div class="total-line">
+                    <span>Total:</span>
+                    <span>{{ "{:,}".format(venta.total) }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Forma de pago -->
+        <div class="forma-pago">
+            <div>Forma de Pago</div>
+            <div>{{ venta.metodo_pago }}</div>
+            <div>{{ "{:,}".format(venta.total) }}</div>
+            
+            <div class="cambio">
+                <div>Cambio: 0</div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div>Elaborado por: {{ sistema_info.elaborado or 'SIIGO/POS' }}</div>
+            <div>{{ sistema_info.website or 'www.siigo.com' }} NIT:{{ sistema_info.nit or '830.048.145' }}</div>
+        </div>
+    </div>
+    
+    <!-- Botones de acción (no se imprimen) -->
+    <div class="no-print" style="text-align: center; margin: 20px 0;">
+        <button onclick="window.print()" style="margin: 5px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            🖨️ Imprimir Factura
+        </button>
+        <button onclick="window.close()" style="margin: 5px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            ❌ Cerrar
+        </button>
+        <button onclick="enviarWhatsApp()" style="margin: 5px; padding: 10px 20px; background: #25d366; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            📱 Enviar WhatsApp
+        </button>
+    </div>
+    
+    <script>
+        // Auto-imprimir si viene con parámetro
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('auto_print') === '1') {
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            }
+        });
+        
+        function enviarWhatsApp() {
+            const texto = `
+Factura de Venta #{{ venta.id_venta }}
+Fecha: {{ venta.fecha_hora.strftime('%d/%m/%Y %H:%M') if not venta.fecha_hora is string else venta.fecha_hora }}
+
+Productos:
+{% for detalle in venta.detalles %}
+{{ detalle.cantidad }} x {{ detalle.producto.nombre }} = ${{ "{:,}".format(detalle.subtotal) }}
+{% endfor %}
+
+Total: ${{ "{:,}".format(venta.total) }}
+Método de Pago: {{ venta.metodo_pago }}
+
+¡Gracias por su compra!
+            `.trim();
+            
+            const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -298,6 +298,53 @@ def api_calcular(id_empresa):
         return jsonify({'error': str(e)}), 400
 
 # ----------------------------------------------------------------------
+# Generar Factura
+# ----------------------------------------------------------------------
+@venta_bp.route("/factura/<int:id_empresa>/<int:id_venta>")
+@login_required
+@verificar_acceso_empresa
+def generar_factura(id_empresa, id_venta):
+    """Generar factura tipo POS"""
+    venta = obtener_venta(id_empresa, id_venta)
+    
+    if not venta:
+        flash("Venta no encontrada", "danger")
+        return redirect(url_for("venta.historial", id_empresa=id_empresa))
+    
+    # Información de la empresa (esto debería venir de la BD)
+    empresa_info = {
+        'nombre': 'SIIGO S.A.S',  # Cambiar por datos reales
+        'nit': '800200100-0',
+        'direccion': 'Call 54 32 71',
+        'ciudad': 'Bogotá',
+        'telefono': '41512108',
+        'resolucion': '191816549/8156',
+        'fecha_autorizacion': '2019/01/22',
+        'prefijo_desde': '1',
+        'prefijo_hasta': '1000000'
+    }
+    
+    # Información del cliente (por defecto)
+    cliente_info = {
+        'nombre': 'CUANTAS MENORES',
+        'documento': '222222222-0',
+        'direccion': 'CALLE FALSA 123'
+    }
+    
+    # Información del sistema
+    sistema_info = {
+        'elaborado': 'SIIGO/POS',
+        'website': 'www.siigo.com',
+        'nit': '830.048.145'
+    }
+    
+    return render_template("ventas/factura.html", 
+                         venta=venta, 
+                         empresa_info=empresa_info,
+                         cliente_info=cliente_info,
+                         sistema_info=sistema_info)
+
+# ----------------------------------------------------------------------
 # Dashboard de Ventas
 # ----------------------------------------------------------------------
 @venta_bp.route("/dashboard/<int:id_empresa>")

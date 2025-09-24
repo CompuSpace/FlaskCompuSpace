@@ -170,6 +170,12 @@
                         🖨️ Imprimir Ticket
                     </button>
                     
+                    <a href="{{ url_for('venta.generar_factura', id_empresa=id_empresa, id_venta=venta.id_venta) }}" 
+                       class="btn btn-outline-success" 
+                       target="_blank">
+                        📄 Generar Factura
+                    </a>
+                    
                     {% if 'ANULADA' not in venta.metodo_pago %}
                     <button class="btn btn-outline-warning" onclick="mostrarModalAnular()">
                         ❌ Anular Venta
