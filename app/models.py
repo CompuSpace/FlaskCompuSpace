@@ -7,11 +7,11 @@ db = SQLAlchemy()
 class Empresa(db.Model):
     __tablename__ = "empresa"
 
-    id_empresa = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_empresa = db.Column(db.String(20)Integer, primary_key=True, autoincrement=True)
     nit = db.Column(db.Integer, nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
     correo_electronico = db.Column(db.String(100), nullable=False)
-    telefono_contacto = db.Column(db.Integer, nullable=False)
+    telefono_contacto = db.Column(db.String(20), nullable=False)
 
     usuarios = db.relationship("Usuario", back_populates="empresa")
     productos = db.relationship("Producto", back_populates="empresa")
