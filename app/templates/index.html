@@ -141,21 +141,41 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#inicio">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#servicios">Servicios</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/productos">Productos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login.html">Iniciar Sesión</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-custom ms-2" href="/registrar_empresa.html">Registrarse</a>
-                    </li>
+                    {% if session.usuario_id %}
+                        <!-- Usuario autenticado -->
+                        <li class="nav-item">
+                            <span class="nav-link">Bienvenido, {{ session.nom_usuario or 'Usuario' }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('usuario.listar', id_empresa=session.empresa_id) }}">📋 Usuarios</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('producto.listar', id_empresa=session.empresa_id) }}">📦 Productos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('venta.punto_venta', id_empresa=session.empresa_id) }}">🛒 Ventas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('usuario.perfil') }}">👤 Perfil</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-danger btn-sm ms-2" href="{{ url_for('usuario.logout') }}">🚪 Cerrar Sesión</a>
+                        </li>
+                    {% else %}
+                        <!-- Usuario NO autenticado -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="#inicio">Inicio</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#servicios">Servicios</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/registrar_empresa">Registrar Empresa</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-custom ms-2" href="{{ url_for('usuario.login') }}">Iniciar Sesión</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
