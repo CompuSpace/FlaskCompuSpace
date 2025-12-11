@@ -7,7 +7,7 @@ db = SQLAlchemy()
 class Empresa(db.Model):
     __tablename__ = "empresa"
 
-    id_empresa = db.Column(db.String(20)Integer, primary_key=True, autoincrement=True)
+    id_empresa = db.Column(db.String(20), primary_key=True, autoincrement=True)
     nit = db.Column(db.Integer, nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
     correo_electronico = db.Column(db.String(100), nullable=False)
