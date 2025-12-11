@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompuSpace - Soluciones Tecnológicas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #00a8e8;
+            --dark-color: #1a1a2e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 100px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100px); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 102, 204, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .navbar {
+            background: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+
+        .btn-custom {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+            color: white;
+        }
+
+        .stats-section {
+            background: var(--dark-color);
+            color: white;
+            padding: 60px 0;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 40px 0 20px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-laptop-code"></i> CompuSpace
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#inicio">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#servicios">Servicios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/productos">Productos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login.html">Iniciar Sesión</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-custom ms-2" href="/registrar_empresa.html">Registrarse</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero-section">
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-3 fw-bold mb-4">Bienvenido a CompuSpace</h1>
+                    <p class="lead mb-4">Tu socio tecnológico de confianza. Ofrecemos soluciones innovadoras en hardware, software y servicios de TI para impulsar tu negocio al siguiente nivel.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#servicios" class="btn btn-light btn-lg">Descubre más</a>
+                        <a href="/productos" class="btn btn-outline-light btn-lg">Ver Productos</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="fas fa-rocket" style="font-size: 15rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="stat-number">500+</div>
+                    <p class="mb-0">Clientes Satisfechos</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-number">1000+</div>
+                    <p class="mb-0">Productos</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-number">24/7</div>
+                    <p class="mb-0">Soporte Técnico</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-number">10+</div>
+                    <p class="mb-0">Años de Experiencia</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="servicios" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Nuestros Servicios</h2>
+                <p class="text-muted">Soluciones tecnológicas completas para tu empresa</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-desktop feature-icon"></i>
+                            <h4 class="mb-3">Hardware</h4>
+                            <p class="text-muted">Equipos de última generación: computadoras, laptops, servidores y componentes de alta calidad.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-code feature-icon"></i>
+                            <h4 class="mb-3">Software</h4>
+                            <p class="text-muted">Soluciones de software empresarial, licencias y desarrollo de aplicaciones personalizadas.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-tools feature-icon"></i>
+                            <h4 class="mb-3">Soporte Técnico</h4>
+                            <p class="text-muted">Servicio técnico especializado, mantenimiento preventivo y correctivo 24/7.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-network-wired feature-icon"></i>
+                            <h4 class="mb-3">Redes</h4>
+                            <p class="text-muted">Diseño, instalación y mantenimiento de infraestructura de redes empresariales.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-cloud feature-icon"></i>
+                            <h4 class="mb-3">Cloud Computing</h4>
+                            <p class="text-muted">Soluciones en la nube para almacenamiento, backup y servicios empresariales.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="fas fa-shield-alt feature-icon"></i>
+                            <h4 class="mb-3">Seguridad</h4>
+                            <p class="text-muted">Protección integral: antivirus, firewalls, auditorías y consultoría en ciberseguridad.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="bg-light py-5">
+        <div class="container text-center">
+            <h2 class="mb-4">¿Listo para transformar tu negocio?</h2>
+            <p class="lead mb-4">Contáctanos hoy y descubre cómo CompuSpace puede ayudarte</p>
+            <a href="/registrar_empresa.html" class="btn btn-custom btn-lg">Comienza Ahora</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5><i class="fas fa-laptop-code"></i> CompuSpace</h5>
+                    <p class="text-muted">Soluciones tecnológicas innovadoras para impulsar tu negocio.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Enlaces Rápidos</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-muted text-decoration-none">Inicio</a></li>
+                        <li><a href="/productos" class="text-muted text-decoration-none">Productos</a></li>
+                        <li><a href="/login.html" class="text-muted text-decoration-none">Iniciar Sesión</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Contacto</h5>
+                    <p class="text-muted mb-1"><i class="fas fa-envelope"></i> info@compuspace.com</p>
+                    <p class="text-muted mb-1"><i class="fas fa-phone"></i> +57 300 123 4567</p>
+                    <p class="text-muted"><i class="fas fa-map-marker-alt"></i> Soacha, Cundinamarca</p>
+                </div>
+            </div>
+            <hr class="bg-secondary">
+            <div class="text-center text-muted">
+                <p>&copy; 2024 CompuSpace. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
