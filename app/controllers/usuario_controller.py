@@ -39,9 +39,12 @@ def crear_usuario(nom_usuario, contrasena, correo_recuperacion, rol, id_empresa)
 # Autenticación
 # ----------------------------------------------------------------------
 def autenticar_usuario(nom_usuario, contrasena):
-    usuario = Usuario.query.filter_by(nom_usuario=nom_usuario).first()
+    usuario = Usuario.query.filter_by(
+        nom_usuario=nom_usuario,
+    ).first()
+
     if not usuario:
-        return None, "Usuario no encontrado"
+        return None, "Usuario no encontrado en esta empresa"
 
     if not bcrypt.check_password_hash(usuario.contrasena, contrasena):
         return None, "Contraseña incorrecta"

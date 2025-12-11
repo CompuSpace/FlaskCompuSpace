@@ -125,11 +125,23 @@ def eliminar(id_empresa, id_usuario):
 # ----------------------------------------------------------------------
 @usuario_bp.route("/perfil")
 def perfil():
-    if 'usuario_id' not in session:
+    # Verificar que haya sesión
+    if 'usuario_id' not in session or 'empresa_id' not in session:
         flash("Debes iniciar sesión", "warning")
         return redirect(url_for('usuario.login'))
     
-    usuario = obtener_usuario(session['empresa_id'], session['usuario_id'])
+    # Obtener usuario usando tu función del controller
+    usuario = obtener_usuario(
+        id_empresa=session['empresa_id'],
+        id_usuario=session['usuario_id']
+    )
+
+    # Validar si existe en la base de datos
+    if not usuario:
+        flash("El usuario no existe o la empresa no coincide", "danger")
+        return redirect(url_for('usuario.login'))
+
+    # Enviar a plantilla
     return render_template("usuarios/perfil.html", usuario=usuario)
 
 @usuario_bp.route("/editar_perfil", methods=["GET", "POST"])

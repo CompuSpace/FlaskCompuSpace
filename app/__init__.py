@@ -5,7 +5,7 @@ from flask_bcrypt import Bcrypt
 def create_app():
     app = Flask(__name__)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost:3306/sistema_inventario'
+    app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql+psycopg2://postgres:steven2007@localhost:5432/sistema_inventario"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = "supersecreto"
      
