@@ -3,7 +3,8 @@ services:
     name: FlaskCompuSpace
     runtime: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn 'main:create_app()'"
+    startCommand: "gunicorn main:app"
+
 
     envVars:
       - key: PYTHON_VERSION
