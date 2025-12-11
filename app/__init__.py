@@ -5,7 +5,11 @@ from flask_bcrypt import Bcrypt
 def create_app():
     app = Flask(__name__)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] ="postgresql+psycopg2://postgres:steven2007@localhost:5432/sistema_inventario"
+    uri = os.getenv("postgresql://sistema_inventario_iqq9_user:RHt1XffIELq3lDp1Fm4jfU5c7aDQX1vg@dpg-d4thqpvpm1nc73982lc0-a/sistema_inventario_iqq9")
+    if uri and uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql+psycopg2://", 1)
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = "supersecreto"
      
